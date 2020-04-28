@@ -1,16 +1,15 @@
-const { ContainerElementTypes, Lifetime } = require('./constants');
-const { getContainerElementType, isComponent } = require('./utils');
+const { Lifetime } = require('./constants');
+const { isComponent, isGroup } = require('./utils');
 
 
 const createContainer = () => {
-  const registrations = [];
   const resolutionStack = [];
   const cache = new Map();
+  const _elements = {};
 
   const container = {
     register,
     resolve,
-    registrations,
     cache
   }
 
@@ -25,35 +24,16 @@ const createContainer = () => {
       ...Object.keys(elements),
       ...Object.getOwnPropertySymbols(elements)
     ];
-    const { parentName } = options;
 
     for (const name of names) {
-      const element = elements[name];
-      const key = parentName ? (parentName + '.' + name) : name
-
-      switch (getContainerElementType(element)) {
-        case ContainerElementTypes.COMPONENT: {
-          registrations[key] = element;
-          break;
-        }
-        case ContainerElementTypes.GROUP: {
-          _register(element.components, { parentName: key });
-          break;
-        }
-        default: {
-          throw new Error(
-            `Component must be wrapped in \`sfioc.component\` method in order to be registered. ` +
-            `Or use \`sfioc.group\` method in order to register multiple components in namespace.`
-          );
-        }
-      }
+      _elements[name] = elements[name];
     }
 
     return container;
   }
 
   function resolve(name) {
-    const component = registrations[name];
+    let component = _getElementByName(name);
 
     if (!isComponent(component)) {
       throw new Error(`Could not resolve ${name}.`)
@@ -100,13 +80,60 @@ const createContainer = () => {
       let children = {};
 
       dependencies.forEach(dependency => {
-        children[dependency] = resolve(dependency);
+        const resolved = resolve(dependency);
+        Object.assign(children, _createDependencyMap(dependency, resolved));
       });
 
       return target(children);
     }
 
     return target();
+  }
+
+  function _createDependencyMap(name, dependency) {
+    const subnames = name.split('.');
+    return _generate(subnames);
+
+    function _generate(paths) {
+      const currentPath = paths.shift();
+      if (!currentPath) return dependency;
+      return { [currentPath]: _generate(paths) }
+    }
+  }
+
+  function _getElementByName(name) {
+    let currentElement, result;
+    const subnames = name.split('.');
+
+    subnames.forEach((subname, index) => {
+      // First iteration:
+      if (index === 0) currentElement = _elements;
+
+      // Middle itarations:
+      if (index + 1 !== subnames.length) {
+        // currentElement = GROUP element.
+        currentElement = currentElement[subname];
+
+        if (isGroup(currentElement)) {
+          currentElement = currentElement.components;
+        } else {
+          // Components are inappropriate in middle iterations.
+          throw new Error(`Incorrect registration name: '${name}'.`);
+        }
+      }
+
+      // Last iteration:
+      else {
+        result = currentElement[subname];
+      }
+    });
+
+    if (!result) {
+      // TODO: DRY
+      throw new Error(`Incorrect registration name: '${name}'.`);
+    }
+
+    return result;
   }
 }
 

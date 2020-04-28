@@ -3,7 +3,8 @@ const { ContainerElementTypes } = require('../constants');
 module.exports = {
   getContainerElementType,
   isContainerElement,
-  isComponent
+  isComponent,
+  isGroup
 }
 
 function getContainerElementType(element) {
@@ -21,4 +22,9 @@ function isContainerElement(element) {
 function isComponent(element) {
   if (!element || !element._sfType) return false;
   return element._sfType === ContainerElementTypes.COMPONENT;
+}
+
+function isGroup(element) {
+  if (!element || !element._sfType) return false;
+  return element._sfType === ContainerElementTypes.GROUP;
 }

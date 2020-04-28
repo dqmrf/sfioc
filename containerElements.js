@@ -52,6 +52,7 @@ function group(components) {
 
   return {
     _sfType: ContainerElementTypes.GROUP,
+    // TODO: empty object {} by default
     components
   }
 }
