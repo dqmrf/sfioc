@@ -30,11 +30,6 @@ function component(inputTarget, inputOptions) {
       target = () => inputTarget;
       break
     }
-    default: {
-      throw new Error(
-        `'sfioc.component' 'type' must be one of these values: ${Object.values(ComponentTypes)}`
-      );
-    }
   }
 
   return {

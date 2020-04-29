@@ -1,7 +1,10 @@
 const { Lifetime } = require('./constants');
+const { SfiocResolutionError } = require('./errors');
 const { isComponent, isGroup } = require('./utils');
 
-module.exports = { createContainer };
+module.exports = {
+  createContainer
+};
 
 function createContainer() {
   const resolutionStack = [];
@@ -37,11 +40,15 @@ function createContainer() {
     let component = _getElementByName(name);
 
     if (!isComponent(component)) {
-      throw new Error(`Could not resolve ${name}.`)
+      throw new SfiocResolutionError(name, resolutionStack);
     }
 
     if (resolutionStack.indexOf(name) > -1) {
-      throw new Error('Cyclic dependencies detected.');
+      throw new SfiocResolutionError(
+        name,
+        resolutionStack,
+        `'Cyclic dependencies detected.'`
+      );
     }
 
     resolutionStack.push(name);
@@ -64,7 +71,11 @@ function createContainer() {
         break;
       }
       default: {
-        throw new Error(`Unknown lifetime ${options.lifetime}`);
+        throw new SfiocResolutionError(
+          name,
+          resolutionStack,
+          `Unknown lifetime "${options.lifetime}"`
+        );
       }
     }
 
@@ -124,7 +135,11 @@ function createContainer() {
         }
       }
 
-      throw new Error(`Incorrect registration name: '${name}'.`);
+      throw new SfiocResolutionError(
+        name,
+        resolutionStack,
+        `Incorrect registration name: '${name}'.`
+      );
     }
   }
 }

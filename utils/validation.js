@@ -1,4 +1,5 @@
 const t = require('tcomb-validation');
+const { SfiocTypeError } = require('../errors');
 const { parseFunctionName } = require('./parsing');
 
 module.exports = {
@@ -8,11 +9,11 @@ module.exports = {
 // Function validates subject and returns it back merged with defaults.
 function validate(subject, validator, inputOpts = {}) {
   if (typeof inputOpts === 'string') {
-    inputOpts = { subjectName: inputOpts }
+    inputOpts = { paramName: inputOpts }
   }
 
   const defaultOpts = {
-    subjectName: validator.displayName || undefined,
+    paramName: validator.displayName || undefined,
     pathSeparator: '.'
   };
   const options = Object.assign({}, defaultOpts, inputOpts);
@@ -26,25 +27,23 @@ function validate(subject, validator, inputOpts = {}) {
 
   function _handleError(errResult) {
     const error = errResult.firstError();
-    let adaptedMessage;
+    let paramPath, expectedValue, givenValue;
 
     try {
       const { path } = error;
-      const { subjectName, pathSeparator } = options;
+      const { paramName, pathSeparator } = options;
       const valuePath = (path && path.length) > 0 ? path.join(pathSeparator) : '';
-      const subjectPath = (subjectName || '') +
-                          ((subjectName && !!valuePath.length) ? pathSeparator : '') +
-                          valuePath;
 
-      const expectedValue = _getExpectedValue(error);
-
-      adaptedMessage = `Invalid value "${error.actual}" supplied to: "${subjectPath}". ` +
-                       `Expected: (${expectedValue})`;
+      paramPath = (paramName || '') +
+                  ((paramName && !!valuePath.length) ? pathSeparator : '') +
+                  valuePath;
+      expectedValue = _getExpectedValue(error);
+      givenValue = error.actual;
     } catch(e) {
       throw new Error(error.message);
     }
 
-    throw new Error(adaptedMessage);
+    throw new SfiocTypeError(null, paramPath, expectedValue, givenValue);
   }
 
   function _getExpectedValue(error) {
