@@ -7,14 +7,17 @@ const ComponentOptions = t.struct({
   lifetime: LifetimeEnums,
   dependsOn: t.maybe(t.union([t.String, t.Array]))
 }, {
+  name: 'SfiocComponent.options',
   defaultProps: {
     type: ComponentTypes.FUNCTION,
     lifetime: Lifetime.TRANSIENT
   }
 });
 
-const GroupOptions =
+const ComponentTargetFn = t.declare('SfiocComponent.target');
+ComponentTargetFn.define(t.Function);
 
 module.exports = {
-  ComponentOptions
+  ComponentOptions,
+  ComponentTargetFn
 };

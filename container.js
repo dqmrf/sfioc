@@ -47,8 +47,7 @@ function createContainer() {
     resolutionStack.push(name);
 
     const { options } = component;
-    let resolved = null;
-    let cached = null;
+    let resolved, cached;
     switch (options.lifetime || Lifetime.TRANSIENT) {
       case Lifetime.TRANSIENT: {
         resolved = _resolveTarget(component);
@@ -96,7 +95,6 @@ function createContainer() {
 
   function _createDependencyMap(name, dependency) {
     const subnames = name.split('.');
-
     return _create(subnames);
 
     function _create(paths) {
@@ -108,7 +106,6 @@ function createContainer() {
 
   function _getElementByName(name) {
     const subnames = name.split('.');
-
     return _find(subnames, _elements);
 
     function _find(paths, elements) {

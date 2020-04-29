@@ -1,6 +1,9 @@
 const t = require('tcomb-validation');
 const { validate } = require('./utils');
-const { ComponentOptions } = require('./structures').containerElements;
+const {
+  ComponentOptions,
+  ComponentTargetFn
+} = require('./structures').containerElements;
 const { ContainerElementTypes, ComponentTypes } = require('./constants');
 
 module.exports = {
@@ -14,14 +17,12 @@ function component(inputTarget, inputOptions) {
 
   switch(options.type) {
     case ComponentTypes.FUNCTION: {
-      // TODO: normal error messages
-      validate(inputTarget, t.Function);
+      validate(inputTarget, ComponentTargetFn);
       target = inputTarget;
       break;
     }
     case ComponentTypes.CLASS: {
-      // TODO: normal error messages
-      validate(inputTarget, t.Function);
+      validate(inputTarget, ComponentTargetFn);
       target = newClass;
       break;
     }
