@@ -1,5 +1,5 @@
 const t = require('tcomb-validation');
-const { validate } = require('./utils');
+const { Validator, validate } = require('./utils');
 const {
   ComponentOptions,
   ComponentTargetFn
@@ -12,17 +12,18 @@ module.exports = {
 }
 
 function component(inputTarget, inputOptions) {
-  const options = validate(inputOptions, ComponentOptions);
+  const v = new Validator('Sfioc.component');
+  const options = v.validate(inputOptions, ComponentOptions);
   let target;
 
   switch(options.type) {
     case ComponentTypes.FUNCTION: {
-      validate(inputTarget, ComponentTargetFn);
+      v.validate(inputTarget, ComponentTargetFn);
       target = inputTarget;
       break;
     }
     case ComponentTypes.CLASS: {
-      validate(inputTarget, ComponentTargetFn);
+      v.validate(inputTarget, ComponentTargetFn);
       target = newClass;
       break;
     }

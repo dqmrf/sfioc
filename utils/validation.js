@@ -2,17 +2,24 @@ const t = require('tcomb-validation');
 const { SfiocTypeError } = require('../errors');
 const { parseFunctionName } = require('./parsing');
 
-module.exports = {
-  validate
+class Validator {
+  constructor(options = {}) {
+    this.options = _setMainOption(options, 'callerDescription');
+  }
+
+  validate(subject, validator, inputOpts = {}) {
+    inputOpts = _setMainOption(inputOpts, 'paramName');
+    let newOpts = Object.assign({}, this.options, inputOpts);
+    return validate(subject, validator, newOpts);
+  }
 }
 
 // Function validates subject and returns it back merged with defaults.
 function validate(subject, validator, inputOpts = {}) {
-  if (typeof inputOpts === 'string') {
-    inputOpts = { paramName: inputOpts }
-  }
+  inputOpts = _setMainOption(inputOpts, 'paramName');
 
   const defaultOpts = {
+    callerDescription: undefined,
     paramName: validator.displayName || undefined,
     pathSeparator: '.'
   };
@@ -27,11 +34,11 @@ function validate(subject, validator, inputOpts = {}) {
 
   function _handleError(errResult) {
     const error = errResult.firstError();
+    const { callerDescription, paramName, pathSeparator } = options;
     let paramPath, expectedValue, givenValue;
 
     try {
       const { path } = error;
-      const { paramName, pathSeparator } = options;
       const valuePath = (path && path.length) > 0 ? path.join(pathSeparator) : '';
 
       paramPath = (paramName || '') +
@@ -43,7 +50,12 @@ function validate(subject, validator, inputOpts = {}) {
       throw new Error(error.message);
     }
 
-    throw new SfiocTypeError(null, paramPath, expectedValue, givenValue);
+    throw new SfiocTypeError(
+      callerDescription,
+      paramPath,
+      expectedValue,
+      givenValue
+    );
   }
 
   function _getExpectedValue(error) {
@@ -59,4 +71,14 @@ function validate(subject, validator, inputOpts = {}) {
 
     return result;
   }
+}
+
+function _setMainOption(arg, mainOption) {
+  if (typeof arg === 'object') return arg;
+  return { [mainOption]: arg }
+}
+
+module.exports = {
+  Validator,
+  validate
 }
