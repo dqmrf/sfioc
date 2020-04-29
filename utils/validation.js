@@ -23,9 +23,9 @@ function validate(subject, validator, inputOpts = {}) {
     paramName: validator.displayName || undefined,
     pathSeparator: '.'
   };
-  const options = Object.assign({}, defaultOpts, inputOpts);
-  const result = t.validate(subject, validator);
+  let options = Object.assign({}, defaultOpts, inputOpts);
 
+  const result = t.validate(subject, validator);
   if (!result.isValid()) {
     return _handleError(result);
   }
@@ -34,15 +34,16 @@ function validate(subject, validator, inputOpts = {}) {
 
   function _handleError(errResult) {
     const error = errResult.firstError();
-    const { callerDescription, paramName, pathSeparator } = options;
+    const shortParamName = _shortenParamName();
+    const { callerDescription, pathSeparator } = options;
     let paramPath, expectedValue, givenValue;
 
     try {
       const { path } = error;
       const valuePath = (path && path.length) > 0 ? path.join(pathSeparator) : '';
 
-      paramPath = (paramName || '') +
-                  ((paramName && !!valuePath.length) ? pathSeparator : '') +
+      paramPath = (shortParamName || '') +
+                  ((shortParamName && !!valuePath.length) ? pathSeparator : '') +
                   valuePath;
       expectedValue = _getExpectedValue(error);
       givenValue = error.actual;
@@ -70,6 +71,17 @@ function validate(subject, validator, inputOpts = {}) {
     }
 
     return result;
+  }
+
+  function _shortenParamName() {
+    const { callerDescription, paramName, pathSeparator } = options;
+    if (!callerDescription) return paramName;
+    const caller = callerDescription + pathSeparator;
+    const callerEscaped = caller.split(pathSeparator).join(`\\${pathSeparator}`);
+    const regexp = new RegExp(`^(${callerEscaped})`, 'g');
+
+    if (!regexp.test(paramName)) return paramName;
+    return paramName.slice(caller.length);
   }
 }
 
