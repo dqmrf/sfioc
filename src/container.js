@@ -27,7 +27,7 @@ function createContainer() {
     return _register(elements);
   }
 
-  function _register(elements, options = {/* private options */}) {
+  function _register(elements) {
     const names = [
       ...Object.keys(elements),
       ...Object.getOwnPropertySymbols(elements)
