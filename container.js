@@ -1,6 +1,8 @@
 const { Lifetime } = require('./constants');
 const { SfiocResolutionError } = require('./errors');
 const { isComponent, isGroup } = require('./utils');
+const { Validator } = require('./utils');
+const { ContainerElements } = require('./structures');
 
 module.exports = {
   createContainer
@@ -20,6 +22,8 @@ function createContainer() {
   return container;
 
   function register(elements) {
+    const v = new Validator('Sfioc.register');
+    v.validate(elements, ContainerElements);
     return _register(elements);
   }
 

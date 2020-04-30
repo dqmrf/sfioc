@@ -5,7 +5,7 @@ const {
   ComponentOptions,
   GroupComponents,
   ComponentTarget
-} = require('./structures').containerElements;
+} = require('./structures');
 
 module.exports = {
   component,
