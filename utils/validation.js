@@ -1,6 +1,5 @@
 const t = require('tcomb-validation');
 const { SfiocTypeError } = require('../errors');
-const { parseFunctionName } = require('./parsing');
 
 class Validator {
   constructor(options = {}) {
@@ -34,18 +33,17 @@ function validate(subject, validator, inputOpts = {}) {
 
   function _handleError(errResult) {
     const error = errResult.firstError();
-    const shortParamName = _shortenParamName();
-    const { callerDescription, pathSeparator } = options;
+    const { callerDescription, pathSeparator, paramName } = options;
     let paramPath, expectedValue, givenValue;
 
     try {
       const { path } = error;
       const valuePath = (path && path.length) > 0 ? path.join(pathSeparator) : '';
 
-      paramPath = (shortParamName || '') +
-                  ((shortParamName && !!valuePath.length) ? pathSeparator : '') +
+      paramPath = (paramName || '') +
+                  ((paramName && !!valuePath.length) ? pathSeparator : '') +
                   valuePath;
-      expectedValue = _getExpectedValue(error);
+      expectedValue = error.expected.displayName;
       givenValue = error.actual;
     } catch(e) {
       throw new Error(error.message);
@@ -57,31 +55,6 @@ function validate(subject, validator, inputOpts = {}) {
       expectedValue,
       givenValue
     );
-  }
-
-  function _getExpectedValue(error) {
-    let result;
-
-    switch(validator.meta.kind) {
-      case 'irreducible':
-        result = parseFunctionName(error.expected.is).slice(2);
-        break;
-      default:
-        result = error.expected.displayName;
-    }
-
-    return result;
-  }
-
-  function _shortenParamName() {
-    const { callerDescription, paramName, pathSeparator } = options;
-    if (!callerDescription) return paramName;
-    const caller = callerDescription + pathSeparator;
-    const callerEscaped = caller.split(pathSeparator).join(`\\${pathSeparator}`);
-    const regexp = new RegExp(`^(${callerEscaped})`, 'g');
-
-    if (!regexp.test(paramName)) return paramName;
-    return paramName.slice(caller.length);
   }
 }
 
