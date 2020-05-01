@@ -1,13 +1,11 @@
 const R = require('ramda');
-const { Lifetime } = require('./constants');
+const { Lifetime, ContainerElementTypes } = require('./constants');
 const { SfiocResolutionError } = require('./errors');
-const { isComponent, isGroup } = require('./utils');
+const { isComponent, isGroup, getContainerElementType } = require('./utils');
 const { Validator } = require('./utils');
 const { ContainerElements } = require('./structures');
 
-module.exports = {
-  createContainer
-};
+const { COMPONENT, GROUP } = ContainerElementTypes;
 
 function createContainer() {
   const resolutionStack = [];
@@ -17,7 +15,13 @@ function createContainer() {
   const container = {
     register,
     resolve,
-    cache
+    cache,
+    get components() {
+      return _extractComponents()
+    },
+    get groups() {
+      return _extractGroups()
+    }
   }
 
   return container;
@@ -147,4 +151,65 @@ function createContainer() {
       );
     }
   }
+
+  function _extractComponents() {
+    return _extractElements(COMPONENT, _elements);
+  }
+
+  function _extractGroups() {
+    return _extractElements(GROUP, _elements);
+  }
+
+  function _extractElements(elementsToExtractType, elements) {
+    let generateSiblingsMap;
+    switch(elementsToExtractType) {
+      case COMPONENT: {
+        generateSiblingsMap = generateComponentsMap;
+        break;
+      }
+      case GROUP: {
+        generateSiblingsMap = generateGroupsMap;
+        break;
+      }
+    }
+
+    return extract(elements);
+
+    function extract(elements, parentName) {
+      const keys = Object.keys(elements);
+      let result = {}
+
+      keys.forEach(key => {
+        const element = elements[key];
+        const elementName = parentName ? `${parentName}.${key}` : key;
+        Object.assign(result, generateSiblingsMap(element, elementName));
+      });
+
+      return result;
+    }
+
+    function generateComponentsMap(element, elementName) {
+      switch(getContainerElementType(element)) {
+        case GROUP: {
+          return extract(element.components, elementName);
+        }
+        case COMPONENT: {
+          return { [elementName]: element }
+        }
+      }
+    }
+
+    function generateGroupsMap(element, elementName) {
+      if (getContainerElementType(element) !== GROUP) return {};
+
+      return Object.assign(
+        { [elementName]: element },
+        extract(element.components, elementName)
+      );
+    }
+  }
 }
+
+module.exports = {
+  createContainer
+};
