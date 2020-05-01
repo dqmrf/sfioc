@@ -1,3 +1,4 @@
+const R = require('ramda');
 const { Lifetime } = require('./constants');
 const { SfiocResolutionError } = require('./errors');
 const { isComponent, isGroup } = require('./utils');
@@ -103,7 +104,7 @@ function createContainer() {
     dependencies.forEach(dependency => {
       const resolvedDependency = resolve(dependency);
       const newDependency = _createDependencyMap(dependency, resolvedDependency);
-      Object.assign(resolvedDependencies, newDependency);
+      resolvedDependencies = R.mergeDeepRight(resolvedDependencies, newDependency);
     });
     return resolvedDependencies;
   }
