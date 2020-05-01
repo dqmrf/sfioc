@@ -115,27 +115,27 @@ function createContainer() {
 
   function _createDependencyMap(name, dependency) {
     const subnames = name.split('.');
-    return _create(subnames);
+    return create(subnames);
 
-    function _create(paths) {
+    function create(paths) {
       const currentPath = paths.shift();
       if (!currentPath) return dependency;
-      return { [currentPath]: _create(paths) }
+      return { [currentPath]: create(paths) }
     }
   }
 
   function _getElementByName(name) {
     const subnames = name.split('.');
-    return _find(subnames, _elements);
+    return find(subnames, _elements);
 
-    function _find(paths, elements) {
+    function find(paths, elements) {
       const isLastPath = !paths[1],
             currentPath = paths.shift(),
             currentElement = elements[currentPath];
 
       if (!isLastPath) {
         if (isGroup(currentElement)) {
-          return _find(paths, currentElement.components);
+          return find(paths, currentElement.components);
         }
         // TODO: else { here will be groups resolving implementation. }
       } else {
@@ -163,14 +163,12 @@ function createContainer() {
   function _extractElements(elementsToExtractType, elements) {
     let generateSiblingsMap;
     switch(elementsToExtractType) {
-      case COMPONENT: {
+      case COMPONENT:
         generateSiblingsMap = generateComponentsMap;
         break;
-      }
-      case GROUP: {
+      case GROUP:
         generateSiblingsMap = generateGroupsMap;
         break;
-      }
     }
 
     return extract(elements);
@@ -190,12 +188,10 @@ function createContainer() {
 
     function generateComponentsMap(element, elementName) {
       switch(getContainerElementType(element)) {
-        case GROUP: {
+        case GROUP:
           return extract(element.components, elementName);
-        }
-        case COMPONENT: {
+        case COMPONENT:
           return { [elementName]: element }
-        }
       }
     }
 
