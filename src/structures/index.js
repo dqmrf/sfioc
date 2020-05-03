@@ -1,9 +1,7 @@
-const container = require('./container');
-const containerElements = require('./containerElements');
+const elements = require('./elements');
 const enums = require('./enums');
 
 module.exports = {
-  ...container,
-  ...containerElements,
+  ...elements,
   ...enums
 }

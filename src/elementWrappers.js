@@ -1,16 +1,15 @@
 const t = require('tcomb-validation');
-const { ContainerElementTypes, ComponentTypes } = require('./constants');
 const { Validator } = require('./utils');
 const {
+  SFIOC,
+  ElementTypes,
+  ComponentTypes
+} = require('./constants');
+const {
   ComponentOptions,
-  GroupComponents,
-  ComponentTarget
+  ComponentTarget,
+  Elements,
 } = require('./structures');
-
-module.exports = {
-  component,
-  group
-}
 
 function component(target, options = {}) {
   const v = new Validator('Sfioc.component');
@@ -35,7 +34,8 @@ function component(target, options = {}) {
   }
 
   return {
-    _sfType: ContainerElementTypes.COMPONENT,
+    _sfType: SFIOC.ELEMENT,
+    _sfElementType: ElementTypes.COMPONENT,
     target: preparedTarget,
     options
   }
@@ -45,12 +45,18 @@ function component(target, options = {}) {
   }
 }
 
-function group(components) {
+function group(elements) {
   const v = new Validator('Sfioc.group');
-  v.validate(components, GroupComponents);
+  v.validate(elements, Elements);
 
   return {
-    _sfType: ContainerElementTypes.GROUP,
-    components
+    _sfType: SFIOC.ELEMENT,
+    _sfElementType: ElementTypes.GROUP,
+    elements
   }
+}
+
+module.exports = {
+  component,
+  group
 }

@@ -6,5 +6,7 @@ Inversion of control container provider.
 - wrap 'tcomb' with sfioc validator (?)
 - structures separators
 - function descriptions
-- validations on container groups
 - add selectors
+- group resolving implementation
+- testing
+- add IDs to components and groups

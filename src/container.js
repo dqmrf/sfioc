@@ -1,54 +1,62 @@
 const R = require('ramda');
-const { Lifetime, ContainerElementTypes } = require('./constants');
+const { Lifetime, ElementTypes } = require('./constants');
 const { SfiocResolutionError } = require('./errors');
-const { isComponent, isGroup, getContainerElementType } = require('./utils');
-const { Validator } = require('./utils');
-const { ContainerElements } = require('./structures');
+const { Elements } = require('./structures');
+const { createRegistration } = require('./registration');
+const { Validator, joinRight, getElementType } = require('./utils');
 
-const { COMPONENT, GROUP } = ContainerElementTypes;
+const { COMPONENT, GROUP } = ElementTypes;
 
 function createContainer() {
+  const registrations = {};
   const resolutionStack = [];
   const cache = new Map();
-  const _elements = {};
 
   const container = {
     register,
     resolve,
-    cache,
-    get components() {
-      return _extractComponents()
-    },
-    get groups() {
-      return _extractGroups()
-    }
+    registrations,
+    cache
   }
 
   return container;
 
   function register(elements) {
     const v = new Validator('Sfioc.register');
-    v.validate(elements, ContainerElements);
+    v.validate(elements, Elements);
     return _register(elements);
   }
 
-  function _register(elements) {
-    const names = [
-      ...Object.keys(elements),
-      ...Object.getOwnPropertySymbols(elements)
-    ];
+  function _register(elements, options = {}) {
+    const elementNames = Object.keys(elements);
+    const { groupId } = options;
 
-    for (const name of names) {
-      _elements[name] = elements[name];
+    for (const elementName of elementNames) {
+      const element = elements[elementName];
+      const elementId = joinRight([groupId, elementName], '.');
+
+      switch(getElementType(element)) {
+        case COMPONENT: {
+          registrations[elementId] = createRegistration(
+            element,
+            { id: elementId, groupId }
+          );
+          break;
+        }
+        case GROUP: {
+          _register(element.elements, { groupId: elementId });
+          break;
+        }
+      }
     }
 
     return container;
   }
 
   function resolve(name) {
-    let component = _getElementByName(name);
+    let registration = registrations[name];
 
-    if (!isComponent(component)) {
+    if (!registration) {
       throw new SfiocResolutionError(name, resolutionStack);
     }
 
@@ -62,17 +70,16 @@ function createContainer() {
 
     resolutionStack.push(name);
 
-    const { options } = component;
     let resolved, cached;
-    switch (options.lifetime || Lifetime.TRANSIENT) {
+    switch (registration.lifetime || Lifetime.TRANSIENT) {
       case Lifetime.TRANSIENT: {
-        resolved = _resolveTarget(component);
+        resolved = _resolveTarget(registration);
         break;
       }
       case Lifetime.SINGLETON: {
         cached = cache.get(name);
         if (!cached) {
-          resolved = _resolveTarget(component);
+          resolved = _resolveTarget(registration);
           cache.set(name, resolved);
         } else {
           resolved = cached;
@@ -83,7 +90,7 @@ function createContainer() {
         throw new SfiocResolutionError(
           name,
           resolutionStack,
-          `Unknown lifetime "${options.lifetime}"`
+          `Unknown lifetime "${registration.lifetime}"`
         );
       }
     }
@@ -92,11 +99,10 @@ function createContainer() {
     return resolved;
   }
 
-  function _resolveTarget(component) {
-    const { options, target } = component;
-    const dependencies = options.dependsOn;
+  function _resolveTarget(registration) {
+    const { target, dependencies } = registration;
 
-    if (dependencies && dependencies.length > 0) {
+    if (dependencies && !!dependencies.length) {
       return target(_resolveTargetDependencies(dependencies));
     }
 
@@ -107,101 +113,20 @@ function createContainer() {
     let resolvedDependencies = {};
     dependencies.forEach(dependency => {
       const resolvedDependency = resolve(dependency);
-      const newDependency = _createDependencyMap(dependency, resolvedDependency);
+      const newDependency = _generateDependenciesMap(dependency, resolvedDependency);
       resolvedDependencies = R.mergeDeepRight(resolvedDependencies, newDependency);
     });
     return resolvedDependencies;
   }
 
-  function _createDependencyMap(name, dependency) {
+  function _generateDependenciesMap(name, dependency) {
     const subnames = name.split('.');
-    return create(subnames);
+    return generate(subnames);
 
-    function create(paths) {
+    function generate(paths) {
       const currentPath = paths.shift();
       if (!currentPath) return dependency;
-      return { [currentPath]: create(paths) }
-    }
-  }
-
-  function _getElementByName(name) {
-    const subnames = name.split('.');
-    return find(subnames, _elements);
-
-    function find(paths, elements) {
-      const isLastPath = !paths[1],
-            currentPath = paths.shift(),
-            currentElement = elements[currentPath];
-
-      if (!isLastPath) {
-        if (isGroup(currentElement)) {
-          return find(paths, currentElement.components);
-        }
-        // TODO: else { here will be groups resolving implementation. }
-      } else {
-        if (isComponent(currentElement)) {
-          return currentElement;
-        }
-      }
-
-      throw new SfiocResolutionError(
-        name,
-        resolutionStack,
-        `Incorrect registration name: '${name}'.`
-      );
-    }
-  }
-
-  function _extractComponents() {
-    return _extractElements(COMPONENT, _elements);
-  }
-
-  function _extractGroups() {
-    return _extractElements(GROUP, _elements);
-  }
-
-  function _extractElements(elementsToExtractType, elements) {
-    let generateSiblingsMap;
-    switch(elementsToExtractType) {
-      case COMPONENT:
-        generateSiblingsMap = generateComponentsMap;
-        break;
-      case GROUP:
-        generateSiblingsMap = generateGroupsMap;
-        break;
-    }
-
-    return extract(elements);
-
-    function extract(elements, parentName) {
-      const keys = Object.keys(elements);
-      let result = {}
-
-      keys.forEach(key => {
-        const element = elements[key];
-        const elementName = parentName ? `${parentName}.${key}` : key;
-        Object.assign(result, generateSiblingsMap(element, elementName));
-      });
-
-      return result;
-    }
-
-    function generateComponentsMap(element, elementName) {
-      switch(getContainerElementType(element)) {
-        case GROUP:
-          return extract(element.components, elementName);
-        case COMPONENT:
-          return { [elementName]: element }
-      }
-    }
-
-    function generateGroupsMap(element, elementName) {
-      if (getContainerElementType(element) !== GROUP) return {};
-
-      return Object.assign(
-        { [elementName]: element },
-        extract(element.components, elementName)
-      );
+      return { [currentPath]: generate(paths) }
     }
   }
 }

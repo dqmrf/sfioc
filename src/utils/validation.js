@@ -20,7 +20,8 @@ function validate(subject, validator, inputOpts = {}) {
   const defaultOpts = {
     callerDescription: undefined,
     paramName: validator.displayName || undefined,
-    pathSeparator: '.'
+    pathSeparator: '.',
+    valuePathSeparator: ':'
   };
   let options = Object.assign({}, defaultOpts, inputOpts);
 
@@ -33,12 +34,17 @@ function validate(subject, validator, inputOpts = {}) {
 
   function _handleError(errResult) {
     const error = errResult.firstError();
-    const { callerDescription, pathSeparator, paramName } = options;
+    const {
+      callerDescription,
+      pathSeparator,
+      valuePathSeparator,
+      paramName
+    } = options;
     let paramPath, expectedValue, givenValue;
 
     try {
       const { path } = error;
-      const valuePath = (path && path.length) > 0 ? path.join(pathSeparator) : '';
+      const valuePath = (path && !!path.length) ? path.join(valuePathSeparator) : '';
 
       paramPath = (paramName || '') +
                   ((paramName && !!valuePath.length) ? pathSeparator : '') +

@@ -1,10 +1,10 @@
 const container = require('./container');
-const containerElements = require('./containerElements');
+const elementWrappers = require('./elementWrappers');
 const { ComponentTypes, Lifetime } = require('./constants');
 
 module.exports = {
   ...container,
-  ...containerElements,
+  ...elementWrappers,
   ComponentTypes,
   Lifetime
 }

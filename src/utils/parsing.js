@@ -1,7 +1,3 @@
-module.exports = {
-  parseFunctionName
-}
-
 function parseFunctionName(arg) {
   let stringifiedFn;
 
@@ -19,4 +15,8 @@ function parseFunctionName(arg) {
 
   let nameFromFnRegex = /^function\s?([^\s(]*)/;
   return stringifiedFn.match(nameFromFnRegex)[1];
+}
+
+module.exports = {
+  parseFunctionName
 }

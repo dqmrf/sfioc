@@ -1,30 +1,24 @@
-const { ContainerElementTypes } = require('../constants');
+const { ElementTypes, SFIOC } = require('../constants');
 
-module.exports = {
-  getContainerElementType,
-  isContainerElement,
-  isComponent,
-  isGroup
+function getElementType(element) {
+  return isElement(element) ? element._sfElementType : undefined;
 }
 
-function getContainerElementType(element) {
-  if (!isContainerElement(element)) return undefined;
-  return element._sfType;
+function isElement(element) {
+  return element && element._sfType === SFIOC.ELEMENT;
 }
 
-function isContainerElement(element) {
-  if (!element || !element._sfType) return false;
-  if (!Object.keys(ContainerElementTypes).includes(element._sfType)) return false;
-  return true;
-}
-
-// Function checks whether the container element is a component (that is: wrapped in a `sfioc.component` method).
 function isComponent(element) {
-  if (!element || !element._sfType) return false;
-  return element._sfType === ContainerElementTypes.COMPONENT;
+  return element && element._sfElementType === ElementTypes.COMPONENT;
 }
 
 function isGroup(element) {
-  if (!element || !element._sfType) return false;
-  return element._sfType === ContainerElementTypes.GROUP;
+  return element && element._sfElementType === ElementTypes.GROUP;
+}
+
+module.exports = {
+  getElementType,
+  isElement,
+  isComponent,
+  isGroup
 }
