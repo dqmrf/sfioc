@@ -1,5 +1,4 @@
-const t = require('tcomb-validation');
-const { Validator } = require('./utils');
+const t = require('./infra/tcomb');
 const { ComponentOptions, Elements } = require('./structures');
 const {
   SFIOC,
@@ -8,18 +7,18 @@ const {
 } = require('./constants');
 
 function component(target, options = {}) {
-  const v = new Validator('Sfioc.component');
-  options = v.validate([options, 'options'], ComponentOptions);
+  const vd = t.createValidator('Sfioc.component');
+  options = vd.handle([options, 'options'], ComponentOptions);
   let preparedTarget;
 
   switch(options.type) {
     case ComponentTypes.FUNCTION: {
-      v.validate([target, 'target'], t.Function);
+      vd.handle([target, 'target'], t.Function);
       preparedTarget = target;
       break;
     }
     case ComponentTypes.CLASS: {
-      v.validate([target, 'target'], t.Function);
+      vd.handle([target, 'target'], t.Function);
       preparedTarget = newClass;
       break;
     }
@@ -42,8 +41,8 @@ function component(target, options = {}) {
 }
 
 function group(elements) {
-  const v = new Validator('Sfioc.group');
-  v.validate([elements, 'elements'], Elements);
+  const vd = t.createValidator('Sfioc.group');
+  vd.handle([elements, 'elements'], Elements);
 
   return {
     _sfType: SFIOC.ELEMENT,

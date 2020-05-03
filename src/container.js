@@ -1,9 +1,10 @@
 const R = require('ramda');
+const t = require('./infra/tcomb');
 const { Lifetime, ElementTypes } = require('./constants');
 const { SfiocResolutionError } = require('./errors');
 const { Elements } = require('./structures');
 const { createRegistration } = require('./registration');
-const { Validator, joinRight, getElementType } = require('./utils');
+const { joinRight, getElementType } = require('./utils');
 
 const { COMPONENT, GROUP } = ElementTypes;
 
@@ -22,8 +23,8 @@ function createContainer() {
   return container;
 
   function register(elements) {
-    const v = new Validator('Sfioc.register');
-    v.validate([elements, 'elements'], Elements);
+    const vd = t.createValidator('Sfioc.register');
+    vd.handle([elements, 'elements'], Elements);
     return _register(elements);
   }
 

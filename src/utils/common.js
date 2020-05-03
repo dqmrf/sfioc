@@ -6,6 +6,12 @@ function joinRight(paths, separator) {
   }, '');
 }
 
+function setMainOption(arg, mainOption) {
+  if (typeof arg === 'object') return arg;
+  return { [mainOption]: arg }
+}
+
 module.exports = {
-  joinRight
+  joinRight,
+  setMainOption
 }

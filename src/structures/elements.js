@@ -4,7 +4,6 @@ const { ElementTypes, ComponentTypes, Lifetime, SFIOC } = require('../constants'
 
 const Component = t.declare('Component');
 const ComponentOptions = t.declare('ComponentOptions');
-const ComponentTarget = t.declare('ComponentTarget');
 const Group = t.declare('Group');
 const ComponentOrGroup = t.declare('Component | Group');
 const Elements = t.declare('Elements');
@@ -12,7 +11,7 @@ const Elements = t.declare('Elements');
 Component.define(t.struct({
   _sfType: t.refinement(t.String, t => t === SFIOC.ELEMENT),
   _sfElementType: t.refinement(t.String, t => t === ElementTypes.COMPONENT),
-  target: ComponentTarget,
+  target: t.Function,
   options: ComponentOptions
 }));
 
@@ -26,8 +25,6 @@ ComponentOptions.define(t.struct({
     lifetime: Lifetime.TRANSIENT
   }
 }));
-
-ComponentTarget.define(t.Function);
 
 Group.define(t.struct({
   _sfType: t.refinement(t.String, t => t === SFIOC.ELEMENT),
@@ -46,7 +43,6 @@ Elements.define(t.dict(t.String, ComponentOrGroup));
 module.exports = {
   Component,
   ComponentOptions,
-  ComponentTarget,
   Group,
   ComponentOrGroup,
   Elements
