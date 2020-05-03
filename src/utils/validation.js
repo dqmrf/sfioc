@@ -3,29 +3,26 @@ const { SfiocTypeError } = require('../errors');
 
 class Validator {
   constructor(options = {}) {
-    this.options = _setMainOption(options, 'callerDescription');
+    this.options = _setMainOption(options, 'callerName');
   }
 
-  validate(subject, validator, inputOpts = {}) {
-    inputOpts = _setMainOption(inputOpts, 'paramName');
+  validate(paramConf, validator, inputOpts = {}) {
     let newOpts = Object.assign({}, this.options, inputOpts);
-    return validate(subject, validator, newOpts);
+    return validate(paramConf, validator, newOpts);
   }
 }
 
-// Function validates subject and returns it back merged with defaults.
-function validate(subject, validator, inputOpts = {}) {
-  inputOpts = _setMainOption(inputOpts, 'paramName');
-
+function validate(paramConf, validator, inputOpts = {}) {
+  const param = paramConf[0];
   const defaultOpts = {
-    callerDescription: undefined,
-    paramName: validator.displayName || undefined,
+    callerName: '',
+    paramName: paramConf[1] || '',
+    expected: undefined,
     pathSeparator: '.',
-    valuePathSeparator: ':'
   };
   let options = Object.assign({}, defaultOpts, inputOpts);
 
-  const result = t.validate(subject, validator);
+  const result = t.validate(param, validator);
   if (!result.isValid()) {
     return _handleError(result);
   }
@@ -34,29 +31,32 @@ function validate(subject, validator, inputOpts = {}) {
 
   function _handleError(errResult) {
     const error = errResult.firstError();
+    console.log(validator);
+    console.log(error);
     const {
-      callerDescription,
+      callerName,
+      paramName,
       pathSeparator,
-      valuePathSeparator,
-      paramName
+      expected
     } = options;
     let paramPath, expectedValue, givenValue;
 
     try {
       const { path } = error;
-      const valuePath = (path && !!path.length) ? path.join(valuePathSeparator) : '';
+      const valuePath = (path && !!path.length) ? path.join(pathSeparator) : '';
 
-      paramPath = (paramName || '') +
+      paramPath = (paramName ? `[${paramName}]` : '') +
                   ((paramName && !!valuePath.length) ? pathSeparator : '') +
                   valuePath;
-      expectedValue = error.expected.displayName;
+      expectedValue = expected || error.expected.displayName || validator.displayName;
+      console.log(paramName)
       givenValue = error.actual;
     } catch(e) {
       throw new Error(error.message);
     }
 
     throw new SfiocTypeError(
-      callerDescription,
+      callerName,
       paramPath,
       expectedValue,
       givenValue

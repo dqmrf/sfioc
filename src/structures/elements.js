@@ -3,8 +3,8 @@ const { LifetimeEnums, ComponentTypesEnums } = require('./enums');
 const { ElementTypes, ComponentTypes, Lifetime, SFIOC } = require('../constants');
 
 const Component = t.declare('Component');
-const ComponentOptions = t.declare('Component:options');
-const ComponentTarget = t.declare('Component:target');
+const ComponentOptions = t.declare('ComponentOptions');
+const ComponentTarget = t.declare('ComponentTarget');
 const Group = t.declare('Group');
 const ComponentOrGroup = t.declare('Component | Group');
 const Elements = t.declare('Elements');

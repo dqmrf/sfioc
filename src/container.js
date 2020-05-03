@@ -23,7 +23,7 @@ function createContainer() {
 
   function register(elements) {
     const v = new Validator('Sfioc.register');
-    v.validate(elements, Elements);
+    v.validate([elements, 'elements'], Elements);
     return _register(elements);
   }
 
