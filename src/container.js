@@ -104,7 +104,13 @@ function createContainer() {
     const { target, dependencies } = registration;
 
     if (dependencies && !!dependencies.length) {
-      return target(_resolveTargetDependencies(dependencies));
+      let preparedDependencies = dependencies;
+
+      if (typeof dependencies === 'string') {
+        preparedDependencies = [dependencies];
+      }
+
+      return target(_resolveTargetDependencies(preparedDependencies));
     }
 
     return target();

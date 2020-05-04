@@ -2,9 +2,9 @@
   "name": "sfioc",
   "version": "1.0.0",
   "description": "IOC container library",
-  "main": "index.js",
+  "main": "./src/sfioc",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [
     "IOC",
@@ -15,5 +15,8 @@
   "dependencies": {
     "ramda": "^0.27.0",
     "tcomb-validation": "^3.4.1"
+  },
+  "devDependencies": {
+    "jest": "^25.5.2"
   }
 }

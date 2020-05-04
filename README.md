@@ -2,7 +2,7 @@
 Inversion of control container provider.
 
 ## TODO:
-- function descriptions
+- add docblocks
 - add selectors
 - group resolving implementation
 - testing
