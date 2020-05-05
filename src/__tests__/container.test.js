@@ -1,27 +1,11 @@
 const { createContainer } = require('../container');
 const { component, group } = require('../elementWrappers');
 const { ComponentTypes, Lifetime } = require('../constants');
-const { SfiocResolutionError, SfiocTypeError } = require('../errors');
+const { SfiocResolutionError } = require('../errors');
 
 const testValue = 228;
 const testValueGetterProvider = ({ testValue }) => () => {
   return testValue;
-}
-
-class TestApp {
-  constructor({ repo }) {
-    this.repo = repo;
-  }
-
-  stuff() {
-    return this.repo.getStuff();
-  }
-}
-
-class TestRepo {
-  getStuff() {
-    return 'stuff';
-  }
 }
 
 describe('createContainer', () => {
@@ -148,6 +132,22 @@ describe('container', () => {
     });
 
     it('supports classes', () => {
+      class TestApp {
+        constructor({ repo }) {
+          this.repo = repo;
+        }
+
+        stuff() {
+          return this.repo.getStuff();
+        }
+      }
+
+      class TestRepo {
+        getStuff() {
+          return 'stuff';
+        }
+      }
+
       container.register({
         app: component(TestApp, {
           type: ComponentTypes.CLASS,
@@ -161,32 +161,15 @@ describe('container', () => {
       const app = container.resolve('app');
       expect(app.stuff()).toBe('stuff');
     });
-
-    it('throws an SfiocTypeError when the lifetime is unknown', () => {
-      let container = createContainer();
-
-      const first = ({ second }) => second;
-      const second = ({ third }) => third;
-
-      let error;
-      try {
-        container.register({
-          first: component(first, { dependsOn: 'second' }),
-          second: component(second, { lifetime: '228', dependsOn: 'third' })
-        });
-      } catch(e) {
-        error = e;
-      }
-
-      expect(error).toBeInstanceOf(SfiocTypeError);
-      expect(error.message).toContain('228');
-    });
   });
 
   describe('resolve', () => {
-    it('throws an SfiocResolutionError when there are unregistered dependencies', () => {
-      let container = createContainer();
+    let container;
+    beforeEach(() => {
+      container = createContainer();
+    });
 
+    it('throws an SfiocResolutionError when there are unregistered dependencies', () => {
       let error;
       try {
         container.resolve('nope');
@@ -199,8 +182,6 @@ describe('container', () => {
     });
 
     it('throws an SfiocResolutionError with a resolution path when resolving an unregistered dependency', () => {
-      let container = createContainer();
-
       const first = ({ second }) => second;
       const second = ({ third }) => third;
       const third = ({ unregistered }) => unregistered;
@@ -223,10 +204,8 @@ describe('container', () => {
     });
 
     describe('lifetime', () => {
-      let container, root, store, acc;
+      let root, store, acc;
       beforeEach(() => {
-        container = createContainer();
-
         root = ({ accumulator, store }) => {
           accumulator.increment();
           return store.getCounter();
@@ -281,8 +260,6 @@ describe('container', () => {
     });
 
     it('throws an SfiocResolutionError when there are cyclic dependencies', () => {
-      let container = createContainer();
-
       const first = ({ second }) => second;
       const second = ({ third }) => third;
       const third = ({ second }) => second;
