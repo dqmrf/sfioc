@@ -15,7 +15,7 @@ module.exports = {
     }
   },
   handle(paramConf, validator, inputOpts = {}) {
-    const param = paramConf[0];
+    let param = paramConf[0];
     const defaultOpts = {
       callerName: '',
       paramName: paramConf[1] || '',
@@ -24,12 +24,18 @@ module.exports = {
     };
     let options = Object.assign({}, defaultOpts, inputOpts);
 
-    const result = this.validate(param, validator);
-    if (!result.isValid()) {
-      return _handleError(result);
+    const { meta } = validator;
+    if (meta.kind === 'struct') {
+      const defaultProps = meta.defaultProps || {};
+      param = Object.assign({}, defaultProps, param);
     }
 
-    return result.value;
+    const validationResult = this.validate(param, validator);
+    if (!validationResult.isValid()) {
+      return _handleError(validationResult);
+    }
+
+    return param;
 
     function _handleError(errResult) {
       const error = errResult.firstError();

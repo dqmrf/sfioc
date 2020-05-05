@@ -1,6 +1,6 @@
 const { SFIOC } = require('./constants');
 
-function createRegistration(component, options = {}) {
+function registration(component, options = {}) {
   return {
     _sfType: SFIOC.REGISTRATION,
     id: options.id,
@@ -8,9 +8,9 @@ function createRegistration(component, options = {}) {
     target: component.target,
     lifetime: component.options.lifetime,
     dependencies: component.options.dependsOn
-  }
+  };
 }
 
 module.exports = {
-  createRegistration
+  registration
 }

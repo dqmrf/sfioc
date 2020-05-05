@@ -3,7 +3,7 @@ const t = require('./infra/tcomb');
 const { Lifetime, ElementTypes } = require('./constants');
 const { SfiocResolutionError } = require('./errors');
 const { Elements } = require('./structures');
-const { createRegistration } = require('./registration');
+const { registration } = require('./registration');
 const { joinRight, getElementType } = require('./utils');
 
 const { COMPONENT, GROUP } = ElementTypes;
@@ -38,7 +38,7 @@ function createContainer() {
 
       switch(getElementType(element)) {
         case COMPONENT: {
-          registrations[elementId] = createRegistration(
+          registrations[elementId] = registration(
             element,
             { id: elementId, groupId }
           );
@@ -104,13 +104,7 @@ function createContainer() {
     const { target, dependencies } = registration;
 
     if (dependencies && !!dependencies.length) {
-      let preparedDependencies = dependencies;
-
-      if (typeof dependencies === 'string') {
-        preparedDependencies = [dependencies];
-      }
-
-      return target(_resolveTargetDependencies(preparedDependencies));
+      return target(_resolveTargetDependencies(dependencies));
     }
 
     return target();

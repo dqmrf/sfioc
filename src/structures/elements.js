@@ -2,20 +2,21 @@ const t = require('../infra/tcomb');
 const { LifetimeEnums, ComponentTypesEnums } = require('./enums');
 const { ElementTypes, ComponentTypes, Lifetime, SFIOC } = require('../constants');
 
-const ElementBase = t.declare('ElementBase');
-const ComponentBase = t.declare('ComponentBase');
-const Component = t.declare('Component');
-const ComponentOptions = t.declare('ComponentOptions');
-const GroupBase = t.declare('GroupBase');
-const Group = t.declare('Group');
-const GroupRecursive = t.declare('GroupRecursive');
 const Element = t.declare('Component | Group');
 const Elements = t.declare('Elements');
+const ComponentBase = t.declare('ComponentBase');
+const Component = t.declare('Component');
+const ComponentProps = t.declare('ComponentProps');
+const ComponentOptions = t.declare('ComponentOptions');
+const GroupBase = t.declare('GroupBase');
+const GroupProps = t.declare('GroupProps');
+const GroupPropsRecursive = t.declare('GroupPropsRecursive');
+const Group = t.declare('Group');
+const GroupRecursive = t.declare('GroupRecursive');
 
-// Element.
-ElementBase.define(t.struct({
-  _sfType: t.refinement(t.String, t => t === SFIOC.ELEMENT)
-}));
+const ElementIdentifier = t.refinement(t.String, x => x === SFIOC.ELEMENT);
+const ComponentIdentifier = t.refinement(t.String, x => x === ElementTypes.COMPONENT);
+const GroupIdentifier = t.refinement(t.String, x => x === ElementTypes.GROUP);
 
 Element.define(t.refinement(t.Object, (obj) => {
   const componentResult = t.validate(obj, Component).isValid();
@@ -25,12 +26,12 @@ Element.define(t.refinement(t.Object, (obj) => {
 
 Elements.define(t.dict(t.String, Element));
 
-// Component.
-ComponentBase.define(ElementBase.extend({
-  _sfElementType: t.refinement(t.String, t => t === ElementTypes.COMPONENT)
+ComponentBase.define(t.struct({
+  _sfType: ElementIdentifier,
+  _sfElementType: ComponentIdentifier
 }));
 
-Component.define(ComponentBase.extend({
+ComponentProps.define(t.struct({
   target: t.Function,
   options: ComponentOptions
 }));
@@ -46,27 +47,32 @@ ComponentOptions.define(t.struct({
   }
 }));
 
-// Group.
-GroupBase.define(ElementBase.extend({
-  _sfElementType: t.refinement(t.String, t => t === ElementTypes.GROUP)
+Component.define(ComponentBase.extend(ComponentProps));
+
+GroupBase.define(t.struct({
+  _sfType: ElementIdentifier,
+  _sfElementType: GroupIdentifier
 }));
 
-Group.define(GroupBase.extend({
-  elements: t.Object
-}));
+GroupProps.define(t.struct({ elements: t.Object }));
 
-GroupRecursive.define(GroupBase.extend({
-  elements: Elements
-}));
+GroupPropsRecursive.define(t.struct({ elements: Elements }));
+
+Group.define(GroupBase.extend(GroupProps));
+
+GroupRecursive.define(GroupBase.extend(GroupPropsRecursive));
 
 module.exports = {
-  ElementBase,
+  ElementIdentifier,
   Element,
   Elements,
   ComponentBase,
-  Component,
+  ComponentProps,
   ComponentOptions,
+  Component,
   GroupBase,
+  GroupProps,
+  GroupPropsRecursive,
   Group,
   GroupRecursive
 };

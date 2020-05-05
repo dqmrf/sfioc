@@ -1,10 +1,6 @@
 const t = require('./infra/tcomb');
-const { ComponentOptions, Elements } = require('./structures');
-const {
-  SFIOC,
-  ElementTypes,
-  ComponentTypes
-} = require('./constants');
+const { ComponentTypes, ElementTypes, SFIOC } = require('./constants');
+const { ComponentOptions } = require('./structures');
 
 function component(target, options = {}) {
   const vd = t.createValidator('Sfioc.component');
@@ -24,8 +20,12 @@ function component(target, options = {}) {
     }
     case ComponentTypes.VALUE: {
       preparedTarget = () => target;
-      break
+      break;
     }
+  }
+
+  if (typeof options.dependsOn === 'string') {
+    options.dependsOn = [options.dependsOn]
   }
 
   return {
@@ -33,7 +33,7 @@ function component(target, options = {}) {
     _sfElementType: ElementTypes.COMPONENT,
     target: preparedTarget,
     options
-  }
+  };
 
   function newClass() {
     return Reflect.construct(target, arguments);
@@ -42,7 +42,7 @@ function component(target, options = {}) {
 
 function group(elements) {
   const vd = t.createValidator('Sfioc.group');
-  vd.handle([elements, 'elements'], Elements);
+  vd.handle([elements, 'elements'], t.Object);
 
   return {
     _sfType: SFIOC.ELEMENT,
