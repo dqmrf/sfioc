@@ -1,7 +1,7 @@
 const { createContainer } = require('../container');
 const { component, group } = require('../elementWrappers');
 const { ComponentTypes, Lifetime } = require('../constants');
-const { SfiocResolutionError } = require('../errors');
+const { SfiocResolutionError, SfiocTypeError } = require('../errors');
 
 const testValue = 228;
 const testValueGetterProvider = ({ testValue }) => () => testValue;
@@ -187,7 +187,7 @@ describe('container', () => {
         expect(callback.mock.calls.length).toBe(1);
       });
 
-      test.only('injects selectors inside callback', () => {
+      it('injects selectors inside callback', () => {
         let callback = jest.fn((DP) => (DP.testValue));
 
         container.register({
@@ -237,6 +237,57 @@ describe('container', () => {
         const getTestValue = container.resolve('getTestValue');
         expect(getTestValue).toBeTruthy();
         expect(getTestValue()).toBe(testValue);
+      });
+
+      it('throws an SfiocTypeError if callback returns an Function', () => {
+        container.register({
+          getTestValue: component(testValueGetterProvider, {
+            dependsOn: () => (() => {})
+          })
+        });
+
+        let error;
+        try {
+          container.resolve('getTestValue');
+        } catch(e) {
+          error = e;
+        }
+
+        expect(error).toBeInstanceOf(SfiocTypeError);
+        expect(error.message).toContain('Function');
+      });
+
+      it('does not inject any dependencies if callback returns an empty Array. ', () => {
+        let callback = jest.fn();
+
+        container.register({
+          getTestValue: component(callback, {
+            dependsOn: () => ([])
+          })
+        });
+
+        container.resolve('getTestValue');
+
+        expect(callback).toHaveBeenCalled();
+        expect(callback.mock.calls).toContainEqual([]);
+      });
+
+      it('throws an SfiocTypeError if callback returns an Array with empty values', () => {
+        container.register({
+          getTestValue: component(testValueGetterProvider, {
+            dependsOn: () => (['', ''])
+          })
+        });
+
+        let error;
+        try {
+          container.resolve('getTestValue');
+        } catch(e) {
+          error = e;
+        }
+
+        expect(error).toBeInstanceOf(SfiocTypeError);
+        expect(error.message).toContain('Array');
       });
     });
 

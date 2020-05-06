@@ -102,7 +102,6 @@ function createContainer() {
   }
 
   function _resolveTarget(registration) {
-    const vd = t.createValidator('Sfioc.resolve');
     let resolvedTarget;
     async.seq(
       next => next(null, registration.dependencies),
@@ -133,26 +132,17 @@ function createContainer() {
         case 'Function': {
           const selectors = _generateDependenciesSelectors();
           const dependencies = dependsOn(selectors);
-          const validated = t.validate(dependencies, ComponentDependencies);
 
+          // This validation is necessary here, because we just called the
+          // callback provided by the user, and injected the selectors inside.
+          // Callback may return some unexpected value, and we need to validate it.
           SfiocTypeError.assert(
-            validated.isValid(),
+            t.validate(dependencies, ComponentDependencies).isValid(),
             (`"dependsOn" callback must return the (String | Array) with dependency names, ` +
-            `but got: (${R.type(validated.value)})`)
+            `but got: (${R.type(dependencies)})`)
           );
 
-          try {
-            return prepareTargetDependencies(dependencies, next);
-          } catch (e) {
-            SfiocTypeError.assert(
-              !e.message.match(/(Callback was already called)/g),
-              ('"dependsOn" callback must return the (String | Array), but got (Function)')
-            );
-            throw e;
-          }
-        }
-        default: {
-          throw new SfiocTypeError('dependencies', 'Array | String | Function', dependencies);
+          return prepareTargetDependencies(dependencies, next);
         }
       }
     }
