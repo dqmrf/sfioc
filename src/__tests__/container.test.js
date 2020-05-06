@@ -4,9 +4,7 @@ const { ComponentTypes, Lifetime } = require('../constants');
 const { SfiocResolutionError } = require('../errors');
 
 const testValue = 228;
-const testValueGetterProvider = ({ testValue }) => () => {
-  return testValue;
-}
+const testValueGetterProvider = ({ testValue }) => () => testValue;
 
 describe('createContainer', () => {
   it('returns an object', () => {
@@ -167,6 +165,79 @@ describe('container', () => {
     let container;
     beforeEach(() => {
       container = createContainer();
+    });
+
+    describe('dealing with "dependsOn" callback', () => {
+      it('calls the callback once', () => {
+        let callback = jest.fn((DP) => (DP.testValue));
+
+        container.register({
+          testValue: component(testValue, {
+            type: ComponentTypes.VALUE
+          }),
+          getTestValue: component(testValueGetterProvider, {
+            type: ComponentTypes.FUNCTION,
+            dependsOn: callback
+          })
+        });
+
+        container.resolve('getTestValue');
+
+        expect(callback).toHaveBeenCalled();
+        expect(callback.mock.calls.length).toBe(1);
+      });
+
+      test.only('injects selectors inside callback', () => {
+        let callback = jest.fn((DP) => (DP.testValue));
+
+        container.register({
+          testValue: component(testValue, {
+            type: ComponentTypes.VALUE
+          }),
+          getTestValue: component(testValueGetterProvider, {
+            type: ComponentTypes.FUNCTION,
+            dependsOn: callback
+          })
+        });
+
+        container.resolve('getTestValue');
+        expect(callback).toHaveBeenCalledWith({
+          testValue: "testValue",
+          getTestValue: "getTestValue"
+        });
+      });
+
+      it('resolve dependencies if callback returns a String with a single existing dependency', () => {
+        container.register({
+          testValue: component(testValue, {
+            type: ComponentTypes.VALUE
+          }),
+          getTestValue: component(testValueGetterProvider, {
+            type: ComponentTypes.FUNCTION,
+            dependsOn: (DP) => (DP.testValue)
+          })
+        });
+
+        const getTestValue = container.resolve('getTestValue');
+        expect(getTestValue).toBeTruthy();
+        expect(getTestValue()).toBe(testValue);
+      });
+
+      it('resolve dependencies if callback returns an Array with a single existing dependency', () => {
+        container.register({
+          testValue: component(testValue, {
+            type: ComponentTypes.VALUE
+          }),
+          getTestValue: component(testValueGetterProvider, {
+            type: ComponentTypes.FUNCTION,
+            dependsOn: (DP) => ([DP.testValue])
+          })
+        });
+
+        const getTestValue = container.resolve('getTestValue');
+        expect(getTestValue).toBeTruthy();
+        expect(getTestValue()).toBe(testValue);
+      });
     });
 
     it('throws an SfiocResolutionError when there are unregistered dependencies', () => {

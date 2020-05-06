@@ -1,16 +1,12 @@
+const R = require('ramda');
 const t = require('../infra/tcomb');
 const { LifetimeEnums, ComponentTypesEnums } = require('./enums');
 const { ElementTypes, ComponentTypes, Lifetime, SFIOC } = require('../constants');
 
 const Element = t.declare('Component | Group');
 const Elements = t.declare('Elements');
-const ComponentBase = t.declare('ComponentBase');
 const Component = t.declare('Component');
-const ComponentProps = t.declare('ComponentProps');
 const ComponentOptions = t.declare('ComponentOptions');
-const GroupBase = t.declare('GroupBase');
-const GroupProps = t.declare('GroupProps');
-const GroupPropsRecursive = t.declare('GroupPropsRecursive');
 const Group = t.declare('Group');
 const GroupRecursive = t.declare('GroupRecursive');
 
@@ -26,20 +22,19 @@ Element.define(t.refinement(t.Object, (obj) => {
 
 Elements.define(t.dict(t.String, Element));
 
-ComponentBase.define(t.struct({
+Component.define(t.struct({
   _sfType: ElementIdentifier,
-  _sfElementType: ComponentIdentifier
-}));
-
-ComponentProps.define(t.struct({
+  _sfElementType: ComponentIdentifier,
   target: t.Function,
   options: ComponentOptions
 }));
 
+const NotEmptyString = t.refinement(t.String, str => !R.isEmpty(str), 'NotEmptyString');
+const ComponentDependencies = t.union([NotEmptyString, t.list(NotEmptyString)]);
 ComponentOptions.define(t.struct({
   type: ComponentTypesEnums,
   lifetime: LifetimeEnums,
-  dependsOn: t.maybe(t.union([t.String, t.Array]))
+  dependsOn: t.maybe(t.union([ComponentDependencies, t.Function]))
 }, {
   defaultProps: {
     type: ComponentTypes.FUNCTION,
@@ -47,32 +42,24 @@ ComponentOptions.define(t.struct({
   }
 }));
 
-Component.define(ComponentBase.extend(ComponentProps));
-
-GroupBase.define(t.struct({
+Group.define(t.struct({
   _sfType: ElementIdentifier,
-  _sfElementType: GroupIdentifier
+  _sfElementType: GroupIdentifier,
+  elements: t.Object
 }));
 
-GroupProps.define(t.struct({ elements: t.Object }));
-
-GroupPropsRecursive.define(t.struct({ elements: Elements }));
-
-Group.define(GroupBase.extend(GroupProps));
-
-GroupRecursive.define(GroupBase.extend(GroupPropsRecursive));
+GroupRecursive.define(t.struct({
+  _sfType: ElementIdentifier,
+  _sfElementType: GroupIdentifier,
+  elements: Elements
+}));
 
 module.exports = {
-  ElementIdentifier,
   Element,
   Elements,
-  ComponentBase,
-  ComponentProps,
   ComponentOptions,
   Component,
-  GroupBase,
-  GroupProps,
-  GroupPropsRecursive,
+  ComponentDependencies,
   Group,
   GroupRecursive
 };

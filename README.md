@@ -2,7 +2,7 @@
 Inversion of control container provider.
 
 ## TODO:
+- remove self* from selectors
 - add docblocks
-- add selectors
 - group resolving implementation
 - testing

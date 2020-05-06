@@ -22,17 +22,42 @@ class SfiocError extends ExtendableError {}
 
 class SfiocTypeError extends SfiocError {
   constructor(
-    funcDescription,
+    description,
     paramName,
     expectedType,
     givenType
   ) {
     let message = '';
-    if (funcDescription) message += `${funcDescription}: `;
+
+    // If the second argument is missing display only the first argument.
+    if (description && paramName) {
+      message += `${description}: `;
+    } else if (description && !paramName) {
+      return super(description)
+    }
+
     message += `Invalid value "${givenType}" supplied to: "${paramName}". Expected: (${expectedType})`;
     super(message);
   }
-}
+
+  static assert(
+    condition,
+    description,
+    paramName,
+    expectedType,
+    givenType
+  ) {
+    if (!condition) {
+      throw new SfiocTypeError(
+        description,
+        paramName,
+        expectedType,
+        givenType
+      )
+    }
+    return condition;
+  }
+};
 
 class SfiocResolutionError extends SfiocError {
   constructor(
