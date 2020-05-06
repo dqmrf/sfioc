@@ -187,7 +187,7 @@ describe('container', () => {
         expect(callback.mock.calls.length).toBe(1);
       });
 
-      it('injects selectors inside callback', () => {
+      it('injects selectors (all but its own) inside callback', () => {
         let callback = jest.fn((DP) => (DP.testValue));
 
         container.register({
@@ -202,8 +202,7 @@ describe('container', () => {
 
         container.resolve('getTestValue');
         expect(callback).toHaveBeenCalledWith({
-          testValue: "testValue",
-          getTestValue: "getTestValue"
+          testValue: "testValue"
         });
       });
 

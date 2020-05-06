@@ -75,13 +75,13 @@ function createContainer() {
     let resolved, cached;
     switch (registration.lifetime || Lifetime.TRANSIENT) {
       case Lifetime.TRANSIENT: {
-        resolved = _resolveTarget(registration);
+        resolved = _resolveRegistration(registration);
         break;
       }
       case Lifetime.SINGLETON: {
         cached = cache.get(name);
         if (!cached) {
-          resolved = _resolveTarget(registration);
+          resolved = _resolveRegistration(registration);
           cache.set(name, resolved);
         } else {
           resolved = cached;
@@ -101,12 +101,13 @@ function createContainer() {
     return resolved;
   }
 
-  function _resolveTarget(registration) {
+  function _resolveRegistration(registration) {
     let resolvedTarget;
+
     async.seq(
-      next => next(null, registration.dependencies),
-      prepareTargetDependencies,
-      resolveTargetDependencies
+      next => next(null, registration),
+      _prepareTargetDependencies,
+      _resolveTargetDependencies
     )((err, resolvedDependencies) => {
       const { target } = registration;
 
@@ -118,8 +119,12 @@ function createContainer() {
     });
 
     return resolvedTarget;
+  }
 
-    function prepareTargetDependencies(dependsOn, next) {
+  function _prepareTargetDependencies(registration, next) {
+    return prepare(registration.dependencies, next);
+
+    function prepare(dependsOn, next) {
       if (!dependsOn || R.isEmpty(dependsOn)) return next(1);
 
       switch (R.type(dependsOn)) {
@@ -130,7 +135,7 @@ function createContainer() {
           return next(null, [dependsOn]);
         }
         case 'Function': {
-          const selectors = _generateDependenciesSelectors();
+          const selectors = _generateDependenciesSelectors(registration);
           const dependencies = dependsOn(selectors);
 
           // This validation is necessary here, because we just called the
@@ -142,27 +147,28 @@ function createContainer() {
             `but got: (${R.type(dependencies)})`)
           );
 
-          return prepareTargetDependencies(dependencies, next);
+          return prepare(dependencies, next);
         }
       }
     }
-
-    function resolveTargetDependencies(dependencies, next) {
-      let resolvedDependencies = {};
-      dependencies.forEach(dependency => {
-        const resolvedDependency = resolve(dependency);
-        const newDependency = U.generateMapFromPath(dependency, resolvedDependency);
-        resolvedDependencies = R.mergeDeepRight(resolvedDependencies, newDependency);
-      });
-      return next(null, resolvedDependencies);
-    }
   }
 
-  function _generateDependenciesSelectors() {
+  function _resolveTargetDependencies(dependencies, next) {
+    let resolvedDependencies = {};
+    dependencies.forEach(dependency => {
+      const resolvedDependency = resolve(dependency);
+      const newDependency = U.generateMapFromPath(dependency, resolvedDependency);
+      resolvedDependencies = R.mergeDeepRight(resolvedDependencies, newDependency);
+    });
+    return next(null, resolvedDependencies);
+  }
+
+  function _generateDependenciesSelectors(exclude = {}) {
     let selectors = {};
 
     Object.values(registrations).forEach(registration => {
       const { id } = registration;
+      if (registration.id === exclude.id) return;
       const newSelector = U.generateMapFromPath(id, id);
       selectors = R.mergeDeepRight(selectors, newSelector);
     });
