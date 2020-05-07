@@ -147,6 +147,7 @@ function createContainer() {
           // Callback may return some unexpected value, and we need to validate it.
           t.handle(dependencies, {
             validator: ComponentDependencies,
+            description: 'Sfioc.resolve',
             message: (`"dependsOn" callback must return the (String | Array)` +
             ` with dependency names, but got: (${R.type(dependencies)})`)
           });

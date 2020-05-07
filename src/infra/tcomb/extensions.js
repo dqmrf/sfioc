@@ -76,7 +76,9 @@ module.exports = {
         expected
       } = options;
 
-      if (message) return message;
+      if (message) {
+        return description ? (`${description}: ` + message) : message;
+      };
 
       const error = errResult.firstError();
       let paramPath, expectedValue, givenValue;
