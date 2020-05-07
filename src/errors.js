@@ -21,23 +21,24 @@ class ExtendableError extends Error {
 class SfiocError extends ExtendableError {}
 
 class SfiocTypeError extends SfiocError {
-  constructor(
-    description,
-    paramName,
-    expectedType,
-    givenType
-  ) {
+  // Params are present for ease of use.
+  constructor(description, paramName, expectedType, givenType) {
+    super(SfiocTypeError.generateMessage(...arguments));
+  }
+
+  static generateMessage(description, paramName, expectedType, givenType) {
     let message = '';
 
     // If the second argument is missing display only the first argument.
     if (description && paramName) {
       message += `${description}: `;
     } else if (description && !paramName) {
-      return super(description)
+      return description;
     }
 
-    message += `Invalid value "${givenType}" supplied to: "${paramName}". Expected: (${expectedType})`;
-    super(message);
+    message += `Invalid value "${givenType}" supplied to: "${paramName}".`;
+    message += ` Expected: (${expectedType})`;
+    return message;
   }
 
   static assert(
@@ -53,7 +54,7 @@ class SfiocTypeError extends SfiocError {
         paramName,
         expectedType,
         givenType
-      )
+      );
     }
     return condition;
   }

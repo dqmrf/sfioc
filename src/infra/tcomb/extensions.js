@@ -1,50 +1,84 @@
-const { setMainOption } = require('../../utils');
+const R = require('ramda');
 const { SfiocTypeError } = require('../../errors');
+const { setMainOption } = require('../../utils');
 
 module.exports = {
-  createValidator(inputOpts) {
-    const options = setMainOption(inputOpts, 'callerName');
+  createHandler(inputOpts) {
+    const options = inputOpts;
 
     return {
-      handle: handle.bind(this)
+      handle: handle.bind(this),
+      extend: extend.bind(this)
     }
 
-    function handle(paramConf, validator, inputOpts = {}) {
+    function handle(param, inputOpts = {}) {
       let newOpts = Object.assign({}, options, inputOpts);
-      return this.handle(paramConf, validator, newOpts);
+      return this.handle(param, newOpts);
+    }
+
+    function extend(inputOpts = {}) {
+      let newOpts = Object.assign({}, options, inputOpts);
+      return this.createHandler(newOpts);
     }
   },
-  handle(paramConf, validator, inputOpts = {}) {
-    let param = paramConf[0];
+  handle(param, inputOpts = {}) {
     const defaultOpts = {
-      callerName: '',
-      paramName: paramConf[1] || '',
-      expected: undefined,
+      validator: null,
+      message: null,
+      description: '',
+      paramName: '',
+      expected: null,
+      throwError: true,
       pathSeparator: '.',
     };
     let options = Object.assign({}, defaultOpts, inputOpts);
 
-    const { meta } = validator;
-    if (meta.kind === 'struct') {
+    const result = this.validate(param, options.validator);
+    if (!result.isValid()) {
+      const errorMsg = handleError(result);
+      if (options.throwError) throw new SfiocTypeError(errorMsg);
+      return {
+        isValid: false,
+        error: { message: errorMsg },
+        value: param
+      };
+    }
+
+    return {
+      isValid: true,
+      error: null,
+      value: paramWithDefaults()
+    }
+
+    function paramWithDefaults() {
+      const { meta } = options.validator;
+
+      if (meta.kind !== 'struct') return param;
+
+      if (R.type(param) !== 'Object') {
+        throw new SfiocTypeError(
+          `In order to assign defaults to param it must be an Object. ` +
+          `Got: ${R.type(param)}`
+        );
+      }
+
       const defaultProps = meta.defaultProps || {};
-      param = Object.assign({}, defaultProps, param);
+      return Object.assign({}, defaultProps, param);
     }
 
-    const validationResult = this.validate(param, validator);
-    if (!validationResult.isValid()) {
-      return _handleError(validationResult);
-    }
-
-    return param;
-
-    function _handleError(errResult) {
-      const error = errResult.firstError();
+    function handleError(errResult) {
       const {
-        callerName,
+        validator,
+        message,
+        description,
         paramName,
         pathSeparator,
         expected
       } = options;
+
+      if (message) return message;
+
+      const error = errResult.firstError();
       let paramPath, expectedValue, givenValue;
 
       try {
@@ -57,11 +91,11 @@ module.exports = {
         expectedValue = expected || error.expected.displayName || validator.displayName;
         givenValue = error.actual;
       } catch(e) {
-        throw new Error(error.message);
+        return error.message;
       }
 
-      throw new SfiocTypeError(
-        callerName,
+      return SfiocTypeError.generateMessage(
+        description,
         paramPath,
         expectedValue,
         givenValue

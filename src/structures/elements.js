@@ -29,8 +29,8 @@ Component.define(t.struct({
   options: ComponentOptions
 }));
 
-const NotEmptyString = t.refinement(t.String, str => !R.isEmpty(str), 'NotEmptyString');
-const ComponentDependencies = t.union([NotEmptyString, t.list(NotEmptyString)]);
+const ComponentDependency = t.refinement(t.String, str => !R.isEmpty(str), 'Dependency');
+const ComponentDependencies = t.union([ComponentDependency, t.list(ComponentDependency)]);
 ComponentOptions.define(t.struct({
   type: ComponentTypesEnums,
   lifetime: LifetimeEnums,

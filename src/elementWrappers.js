@@ -1,20 +1,34 @@
 const t = require('./infra/tcomb');
-const { ComponentTypes, ElementTypes, SFIOC } = require('./constants');
 const { ComponentOptions } = require('./structures');
+const { ComponentTypes, ElementTypes, SFIOC } = require('./constants');
 
 function component(target, options = {}) {
-  const vd = t.createValidator('Sfioc.component');
-  options = vd.handle([options, 'options'], ComponentOptions);
+  const handler = t.createHandler({
+    description: 'Sfioc.component'
+  });
+
+  const optsHandler = handler.extend({
+    validator: ComponentOptions,
+    paramName: 'options'
+  });
+
+  const targetHandler = handler.extend({
+    validator: t.Function,
+    paramName: 'target'
+  });
+
+  options = optsHandler.handle(options).value;
+
   let preparedTarget;
 
   switch(options.type) {
     case ComponentTypes.FUNCTION: {
-      vd.handle([target, 'target'], t.Function);
+      targetHandler.handle(target);
       preparedTarget = target;
       break;
     }
     case ComponentTypes.CLASS: {
-      vd.handle([target, 'target'], t.Function);
+      targetHandler.handle(target);
       preparedTarget = newClass;
       break;
     }
@@ -37,8 +51,11 @@ function component(target, options = {}) {
 }
 
 function group(elements) {
-  const vd = t.createValidator('Sfioc.group');
-  vd.handle([elements, 'elements'], t.Object);
+  t.handle(elements, {
+    validator: t.Object,
+    description: 'Sfioc.group',
+    paramName: 'elements'
+  });
 
   return {
     _sfType: SFIOC.ELEMENT,

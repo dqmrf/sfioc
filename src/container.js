@@ -24,8 +24,12 @@ function createContainer() {
   return container;
 
   function register(elements) {
-    const vd = t.createValidator('Sfioc.register');
-    vd.handle([elements, 'elements'], Elements);
+    t.handle(elements, {
+      validator: Elements,
+      description: 'Sfioc.register',
+      paramName: 'elements'
+    });
+
     return _register(elements);
   }
 
@@ -141,11 +145,11 @@ function createContainer() {
           // This validation is necessary here, because we just called the
           // callback provided by the user, and injected the selectors inside.
           // Callback may return some unexpected value, and we need to validate it.
-          SfiocTypeError.assert(
-            t.validate(dependencies, ComponentDependencies).isValid(),
-            (`"dependsOn" callback must return the (String | Array) with dependency names, ` +
-            `but got: (${R.type(dependencies)})`)
-          );
+          t.handle(dependencies, {
+            validator: ComponentDependencies,
+            message: (`"dependsOn" callback must return the (String | Array)` +
+            ` with dependency names, but got: (${R.type(dependencies)})`)
+          });
 
           return prepare(dependencies, next);
         }
