@@ -3,17 +3,29 @@ const async = require('async');
 const U = require('./utils');
 const t = require('./infra/tcomb');
 const { Lifetime, ElementTypes } = require('./constants');
-const { SfiocResolutionError, SfiocTypeError } = require('./errors');
+const { SfiocResolutionError } = require('./errors');
 const { Elements, ComponentDependencies } = require('./structures');
 const { registration } = require('./registration');
 
 const { COMPONENT, GROUP } = ElementTypes;
 
+/**
+ * Creates an Sfioc container instance.
+ *
+ * @return {object}
+ * The container.
+ */
 function createContainer() {
+  // Storage for all registered registrations.
   const registrations = {};
+
+  // Storage for currently resolved components.
   const resolutionStack = [];
+
+  // Storage for resolved components with 'SINGLETON' lifetime.
   const cache = new Map();
 
+  // Container itself.
   const container = {
     register,
     resolve,
@@ -23,6 +35,15 @@ function createContainer() {
 
   return container;
 
+  /**
+   * Registers input elements.
+   *
+   * @param {object} elements
+   * Object with container elements.
+   *
+   * @return {object}
+   * The container.
+   */
   function register(elements) {
     t.handle(elements, {
       validator: Elements,
@@ -33,6 +54,21 @@ function createContainer() {
     return _register(elements);
   }
 
+  /**
+   * Registers input elements.
+   *
+   * This method is only used internally, so it doesn't need any
+   * input parameter validations.
+   *
+   * @param {object} elements
+   * Object with container elements.
+   *
+   * @param {object} options
+   * Options for internal recursive calls.
+   *
+   * @return {object}
+   * The container.
+   */
   function _register(elements, options = {}) {
     const elementNames = Object.keys(elements);
     const { groupId } = options;
@@ -59,6 +95,15 @@ function createContainer() {
     return container;
   }
 
+  /**
+   * Resolves the registration with the given name.
+   *
+   * @param {string} name
+   * The name of the registration to resolve.
+   *
+   * @return {any}
+   * Whatever was resolved.
+   */
   function resolve(name) {
     let registration = registrations[name];
 
@@ -105,6 +150,15 @@ function createContainer() {
     return resolved;
   }
 
+  /**
+   * Resolves the dependencies of the given registration.
+   *
+   * @param {object} registration
+   * The registration to resolve.
+   *
+   * @return {any}
+   * Whatever was resolved.
+   */
   function _resolveRegistration(registration) {
     let resolvedTarget;
 
@@ -125,6 +179,20 @@ function createContainer() {
     return resolvedTarget;
   }
 
+  /**
+   * Transforms dependencies of the given registration to an Array.
+   *
+   * WARNING: This function is part of a sequential chain of operations.
+   *
+   * @param {object} registration
+   * The registration.
+   *
+   * @param {function} next
+   * Callback to the next step.
+   *
+   * @return {array}
+   * Adapted dependencies for further use.
+   */
   function _prepareTargetDependencies(registration, next) {
     return prepare(registration.dependencies, next);
 
@@ -158,6 +226,21 @@ function createContainer() {
     }
   }
 
+  /**
+   * 1. Resolves all of the given dependencies (for current registration).
+   * 2. Creates a single map with all of the resolved dependencies.
+   *
+   * WARNING: This function is part of a sequential chain of operations.
+   *
+   * @param {array} dependencies
+   * The registration to resolve.
+   *
+   * @param {function} next
+   * Callback to the next step.
+   *
+   * @return {object}
+   * Map with resolved dependencies that will be injected into the target function.
+   */
   function _resolveTargetDependencies(dependencies, next) {
     let resolvedDependencies = {};
     dependencies.forEach(dependency => {
@@ -168,12 +251,22 @@ function createContainer() {
     return next(null, resolvedDependencies);
   }
 
+  /**
+   * Generate selectors with registrations to pass them to the 'dependsOn'
+   * callback in the future.
+   *
+   * @param {object} registration
+   * The registration to exclude.
+   *
+   * @return {object}
+   * Ready selectors.
+   */
   function _generateDependenciesSelectors(exclude = {}) {
     let selectors = {};
 
     Object.values(registrations).forEach(registration => {
       const { id } = registration;
-      if (registration.id === exclude.id) return;
+      if (id === exclude.id) return;
       const newSelector = U.generateMapFromPath(id, id);
       selectors = R.mergeDeepRight(selectors, newSelector);
     });

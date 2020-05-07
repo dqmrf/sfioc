@@ -1,6 +1,5 @@
 const R = require('ramda');
 const { SfiocTypeError } = require('../../errors');
-const { setMainOption } = require('../../utils');
 
 module.exports = {
   createHandler(inputOpts) {

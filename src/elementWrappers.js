@@ -2,6 +2,18 @@ const t = require('./infra/tcomb');
 const { ComponentOptions } = require('./structures');
 const { ComponentTypes, ElementTypes, SFIOC } = require('./constants');
 
+/**
+ * Prepares the dependency for registration.
+ *
+ * @param {any} target
+ * Dependency for resolving.
+ *
+ * @param {object} options
+ * Dependency options.
+ *
+ * @return {object}
+ * Container 'COMPONENT' element that can be registered.
+ */
 function component(target, options = {}) {
   const handler = t.createHandler({
     description: 'Sfioc.component'
@@ -50,6 +62,15 @@ function component(target, options = {}) {
   }
 }
 
+/**
+ * Prepares the group of dependencies (or groups) for registration.
+ *
+ * @param {object} elements
+ * Dependencies wrapped with 'sfioc.component' or 'sfioc.group' wrappers.
+ *
+ * @return {object}
+ * Container 'GROUP' element that can be registered.
+ */
 function group(elements) {
   t.handle(elements, {
     validator: t.Object,
