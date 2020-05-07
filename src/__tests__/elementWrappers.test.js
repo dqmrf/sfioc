@@ -47,12 +47,6 @@ describe('component wrapper', () => {
     });
   });
 
-  it('accepts a single dependency as a string', () => {
-    const component = componentWrapper(stubTarget, { dependsOn: 'dependency' });
-
-    expect(component.options.dependsOn).toStrictEqual(['dependency']);
-  });
-
   it('wraps target function correctly', () => {
     const component = componentWrapper(() => 228, {
       type: ComponentTypes.FUNCTION

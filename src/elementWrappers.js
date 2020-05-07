@@ -24,10 +24,6 @@ function component(target, options = {}) {
     }
   }
 
-  if (typeof options.dependsOn === 'string') {
-    options.dependsOn = [options.dependsOn]
-  }
-
   return {
     _sfType: SFIOC.ELEMENT,
     _sfElementType: ElementTypes.COMPONENT,
