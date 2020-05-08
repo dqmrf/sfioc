@@ -122,7 +122,7 @@ function createContainer() {
     resolutionStack.push(name);
 
     let resolved, cached;
-    switch (registration.lifetime || Lifetime.TRANSIENT) {
+    switch (registration.lifetime) {
       case Lifetime.TRANSIENT: {
         resolved = _resolveRegistration(registration);
         break;

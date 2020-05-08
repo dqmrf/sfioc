@@ -11,17 +11,18 @@ module.exports = {
     }
 
     function handle(param, inputOpts = {}) {
-      let newOpts = Object.assign({}, options, inputOpts);
+      let newOpts = R.mergeRight(options, inputOpts);
       return this.handle(param, newOpts);
     }
 
     function extend(inputOpts = {}) {
-      let newOpts = Object.assign({}, options, inputOpts);
+      let newOpts = R.mergeRight(options, inputOpts);
       return this.createHandler(newOpts);
     }
   },
   handle(param, inputOpts = {}) {
     const defaultOpts = {
+      defaults: null,
       validator: null,
       message: null,
       description: '',
@@ -30,9 +31,25 @@ module.exports = {
       throwError: true,
       pathSeparator: '.',
     };
-    let options = Object.assign({}, defaultOpts, inputOpts);
 
-    const result = this.validate(param, options.validator);
+    const options = R.mergeRight(defaultOpts, inputOpts);
+    const { validator } = options;
+
+    if (validator.meta.kind === 'struct') {
+      let result = this.handle(param, {
+        ...options,
+        defaults: null,
+        validator: this.Object
+      });
+
+      if (!result.isValid) return result;
+
+      if (options.defaults) {
+        param = R.mergeRight(options.defaults, param);
+      }
+    }
+
+    let result = this.validate(param, validator);
     if (!result.isValid()) {
       const errorMsg = handleError(result);
       if (options.throwError) throw new SfiocTypeError(errorMsg);
@@ -46,23 +63,7 @@ module.exports = {
     return {
       isValid: true,
       error: null,
-      value: paramWithDefaults()
-    }
-
-    function paramWithDefaults() {
-      const { meta } = options.validator;
-
-      if (meta.kind !== 'struct') return param;
-
-      if (R.type(param) !== 'Object') {
-        throw new SfiocTypeError(
-          `In order to assign defaults to param it must be an Object. ` +
-          `Got: ${R.type(param)}`
-        );
-      }
-
-      const defaultProps = meta.defaultProps || {};
-      return Object.assign({}, defaultProps, param);
+      value: param
     }
 
     function handleError(errResult) {

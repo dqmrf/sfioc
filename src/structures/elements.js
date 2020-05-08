@@ -35,11 +35,6 @@ ComponentOptions.define(t.struct({
   type: ComponentTypesEnums,
   lifetime: LifetimeEnums,
   dependsOn: t.maybe(t.union([ComponentDependencies, t.Function]))
-}, {
-  defaultProps: {
-    type: ComponentTypes.FUNCTION,
-    lifetime: Lifetime.TRANSIENT
-  }
 }));
 
 Group.define(t.struct({

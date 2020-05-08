@@ -1,6 +1,11 @@
 const t = require('./infra/tcomb');
 const { ComponentOptions } = require('./structures');
-const { ComponentTypes, ElementTypes, SFIOC } = require('./constants');
+const { ComponentTypes, Lifetime, ElementTypes, SFIOC } = require('./constants');
+
+const defaultOptions = {
+  type: ComponentTypes.FUNCTION,
+  lifetime: Lifetime.TRANSIENT
+}
 
 const handler = t.createHandler({
   description: 'Sfioc.Component'
@@ -8,7 +13,8 @@ const handler = t.createHandler({
 
 const optionsHandler = handler.extend({
   validator: ComponentOptions,
-  paramName: 'options'
+  paramName: 'options',
+  defaults: defaultOptions
 });
 
 const targetHandler = handler.extend({
