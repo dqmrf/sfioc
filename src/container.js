@@ -5,7 +5,7 @@ const t = require('./infra/tcomb');
 const { Lifetime, ElementTypes } = require('./constants');
 const { SfiocResolutionError } = require('./errors');
 const { Elements, ComponentDependencies } = require('./structures');
-const { registration } = require('./registration');
+const { createRegistration } = require('./registration');
 
 const { COMPONENT, GROUP } = ElementTypes;
 
@@ -19,10 +19,10 @@ function createContainer() {
   // Storage for all registered registrations.
   const registrations = {};
 
-  // Storage for currently resolved components.
+  // Storage for currently resolved dependencies.
   const resolutionStack = [];
 
-  // Storage for resolved components with 'SINGLETON' lifetime.
+  // Storage for resolved dependencies with 'SINGLETON' lifetime.
   const cache = new Map();
 
   // Container itself.
@@ -79,7 +79,7 @@ function createContainer() {
 
       switch(U.getElementType(element)) {
         case COMPONENT: {
-          registrations[elementId] = registration(
+          registrations[elementId] = createRegistration(
             element,
             { id: elementId, groupId }
           );

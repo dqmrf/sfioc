@@ -12,7 +12,7 @@ const { SFIOC } = require('./constants');
  * @return {object}
  * Registration that will be pushed in the containers' 'registrations' storage.
  */
-function registration(component, options = {}) {
+function createRegistration(component, options = {}) {
   return {
     _sfType: SFIOC.REGISTRATION,
     id: options.id,
@@ -24,5 +24,5 @@ function registration(component, options = {}) {
 }
 
 module.exports = {
-  registration
-}
+  createRegistration
+};

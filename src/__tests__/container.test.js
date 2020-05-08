@@ -1,5 +1,7 @@
+const { catchError } = require('../utils');
 const { createContainer } = require('../container');
-const { component, group } = require('../elementWrappers');
+const { groupWrapper } = require('../group');
+const { componentWrapper } = require('../component');
 const { ComponentTypes, Lifetime } = require('../constants');
 const { SfiocResolutionError, SfiocTypeError } = require('../errors');
 
@@ -18,10 +20,11 @@ describe('container', () => {
     let container = createContainer();
 
     container.register({
-      testValue: component(testValue, {
+      testValue: componentWrapper(testValue, {
         type: ComponentTypes.VALUE
       }),
-      getTestValue: component(testValueGetterProvider, {
+      getTestValue: componentWrapper(
+        testValueGetterProvider, {
         type: ComponentTypes.FUNCTION,
         dependsOn: ['testValue']
       })
@@ -63,12 +66,12 @@ describe('container', () => {
     });
 
     container.register({
-      app: component(app, {
+      app: componentWrapper(app, {
         dependsOn: ['operations.login', 'operations.another']
       }),
-      operations: group({
-        login: component(loginOperation),
-        another: component(anotherOperation)
+      operations: groupWrapper({
+        login: componentWrapper(loginOperation),
+        another: componentWrapper(anotherOperation)
       })
     });
 
@@ -92,13 +95,14 @@ describe('container', () => {
 
     it('lets me register registrations in multiple calls', () => {
       container.register({
-        testValue: component(testValue, {
+        testValue: componentWrapper(testValue, {
           type: ComponentTypes.VALUE
         })
       });
 
       container.register({
-        getTestValue: component(testValueGetterProvider, {
+        getTestValue: componentWrapper(
+          testValueGetterProvider, {
           type: ComponentTypes.FUNCTION,
           dependsOn: ['testValue']
         })
@@ -113,10 +117,11 @@ describe('container', () => {
 
     it('accepts a single dependency as a string', () => {
       container.register({
-        testValue: component(testValue, {
+        testValue: componentWrapper(testValue, {
           type: ComponentTypes.VALUE
         }),
-        getTestValue: component(testValueGetterProvider, {
+        getTestValue: componentWrapper(
+          testValueGetterProvider, {
           type: ComponentTypes.FUNCTION,
           dependsOn: 'testValue'
         })
@@ -147,11 +152,11 @@ describe('container', () => {
       }
 
       container.register({
-        app: component(TestApp, {
+        app: componentWrapper(TestApp, {
           type: ComponentTypes.CLASS,
           dependsOn: ['repo']
         }),
-        repo: component(TestRepo, {
+        repo: componentWrapper(TestRepo, {
           type: ComponentTypes.CLASS
         })
       })
@@ -172,10 +177,11 @@ describe('container', () => {
         let callback = jest.fn((DP) => (DP.testValue));
 
         container.register({
-          testValue: component(testValue, {
+          testValue: componentWrapper(testValue, {
             type: ComponentTypes.VALUE
           }),
-          getTestValue: component(testValueGetterProvider, {
+          getTestValue: componentWrapper(
+            testValueGetterProvider, {
             type: ComponentTypes.FUNCTION,
             dependsOn: callback
           })
@@ -191,10 +197,11 @@ describe('container', () => {
         let callback = jest.fn((DP) => (DP.testValue));
 
         container.register({
-          testValue: component(testValue, {
+          testValue: componentWrapper(testValue, {
             type: ComponentTypes.VALUE
           }),
-          getTestValue: component(testValueGetterProvider, {
+          getTestValue: componentWrapper(
+            testValueGetterProvider, {
             type: ComponentTypes.FUNCTION,
             dependsOn: callback
           })
@@ -208,10 +215,11 @@ describe('container', () => {
 
       it('resolve dependencies if callback returns a String with a single existing dependency', () => {
         container.register({
-          testValue: component(testValue, {
+          testValue: componentWrapper(testValue, {
             type: ComponentTypes.VALUE
           }),
-          getTestValue: component(testValueGetterProvider, {
+          getTestValue: componentWrapper(
+            testValueGetterProvider, {
             type: ComponentTypes.FUNCTION,
             dependsOn: (DP) => (DP.testValue)
           })
@@ -224,10 +232,11 @@ describe('container', () => {
 
       it('resolve dependencies if callback returns an Array with a single existing dependency', () => {
         container.register({
-          testValue: component(testValue, {
+          testValue: componentWrapper(testValue, {
             type: ComponentTypes.VALUE
           }),
-          getTestValue: component(testValueGetterProvider, {
+          getTestValue: componentWrapper(
+            testValueGetterProvider, {
             type: ComponentTypes.FUNCTION,
             dependsOn: (DP) => ([DP.testValue])
           })
@@ -240,17 +249,15 @@ describe('container', () => {
 
       it('throws an SfiocTypeError if callback returns an Function', () => {
         container.register({
-          getTestValue: component(testValueGetterProvider, {
+          getTestValue: componentWrapper(
+            testValueGetterProvider, {
             dependsOn: () => (() => {})
           })
         });
 
-        let error;
-        try {
+        const error = catchError(() => {
           container.resolve('getTestValue');
-        } catch(e) {
-          error = e;
-        }
+        });
 
         expect(error).toBeInstanceOf(SfiocTypeError);
         expect(error.message).toContain('Function');
@@ -260,7 +267,7 @@ describe('container', () => {
         let callback = jest.fn();
 
         container.register({
-          getTestValue: component(callback, {
+          getTestValue: componentWrapper(callback, {
             dependsOn: () => ([])
           })
         });
@@ -273,17 +280,15 @@ describe('container', () => {
 
       it('throws an SfiocTypeError if callback returns an Array with empty values', () => {
         container.register({
-          getTestValue: component(testValueGetterProvider, {
+          getTestValue: componentWrapper(
+            testValueGetterProvider, {
             dependsOn: () => (['', ''])
           })
         });
 
-        let error;
-        try {
+        const error = catchError(() => {
           container.resolve('getTestValue');
-        } catch(e) {
-          error = e;
-        }
+        });
 
         expect(error).toBeInstanceOf(SfiocTypeError);
         expect(error.message).toContain('Array');
@@ -291,12 +296,9 @@ describe('container', () => {
     });
 
     it('throws an SfiocResolutionError when there are unregistered dependencies', () => {
-      let error;
-      try {
+      const error = catchError(() => {
         container.resolve('nope');
-      } catch(e) {
-        error = e;
-      }
+      });
 
       expect(error).toBeInstanceOf(SfiocResolutionError);
       expect(error.message).toMatch(/nope/i);
@@ -308,17 +310,14 @@ describe('container', () => {
       const third = ({ unregistered }) => unregistered;
 
       container.register({
-        first: component(first, { dependsOn: 'second' }),
-        second: component(second, { dependsOn: 'third' }),
-        third: component(third, { dependsOn: 'unregistered' }),
+        first: componentWrapper(first, { dependsOn: 'second' }),
+        second: componentWrapper(second, { dependsOn: 'third' }),
+        third: componentWrapper(third, { dependsOn: 'unregistered' }),
       });
 
-      let error;
-      try {
+      const error = catchError(() => {
         container.resolve('first');
-      } catch(e) {
-        error = e;
-      }
+      });
 
       expect(error).toBeInstanceOf(SfiocResolutionError);
       expect(error.message).toContain('first -> second -> third');
@@ -347,13 +346,13 @@ describe('container', () => {
 
       it('supports singleton lifetime', () => {
         container.register({
-          root: component(root, {
+          root: componentWrapper(root, {
             dependsOn: ['accumulator', 'store']
           }),
-          store: component(store, {
+          store: componentWrapper(store, {
             dependsOn: 'accumulator'
           }),
-          accumulator: component(acc, {
+          accumulator: componentWrapper(acc, {
             lifetime: Lifetime.SINGLETON
           })
         });
@@ -364,13 +363,13 @@ describe('container', () => {
 
       it('supports transient lifetime', () => {
         container.register({
-          root: component(root, {
+          root: componentWrapper(root, {
             dependsOn: ['accumulator', 'store']
           }),
-          store: component(store, {
+          store: componentWrapper(store, {
             dependsOn: 'accumulator'
           }),
-          accumulator: component(acc, {
+          accumulator: componentWrapper(acc, {
             lifetime: Lifetime.TRANSIENT
           })
         });
@@ -386,17 +385,14 @@ describe('container', () => {
       const third = ({ second }) => second;
 
       container.register({
-        first: component(first, { dependsOn: 'second' }),
-        second: component(second, { dependsOn: 'third' }),
-        third: component(third, { dependsOn: 'second' }),
+        first: componentWrapper(first, { dependsOn: 'second' }),
+        second: componentWrapper(second, { dependsOn: 'third' }),
+        third: componentWrapper(third, { dependsOn: 'second' }),
       });
 
-      let error;
-      try {
+      const error = catchError(() => {
         container.resolve('first');
-      } catch(e) {
-        error = e;
-      }
+      });
 
       expect(error).toBeInstanceOf(SfiocResolutionError);
       expect(error.message).toContain('first -> second -> third -> second');

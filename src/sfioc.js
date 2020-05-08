@@ -1,10 +1,12 @@
 const container = require('./container');
-const elementWrappers = require('./elementWrappers');
+const { componentWrapper } = require('./component');
+const { groupWrapper } = require('./group');
 const { ComponentTypes, Lifetime } = require('./constants');
 
 module.exports = {
   ...container,
-  ...elementWrappers,
+  component: componentWrapper,
+  group: groupWrapper,
   ComponentTypes,
   Lifetime
 }
