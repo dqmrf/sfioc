@@ -5,37 +5,30 @@ const { ComponentTypes, Lifetime, ElementTypes, SFIOC } = require('../constants'
 
 const stubTarget = jest.fn();
 
-const componentPrivateAttrs = {
-  _sfType: SFIOC.ELEMENT,
-  _sfElementType: ElementTypes.COMPONENT,
-}
-
 describe('componentWrapper', () => {
   it('returns a component', () => {
-    const componentOpts = {
+    const options = {
       type: ComponentTypes.FUNCTION,
       lifetime: Lifetime.SINGLETON,
       dependsOn: ['dependency1', 'dependency2']
     }
-    const component = componentWrapper(stubTarget, componentOpts);
+    const component = componentWrapper(stubTarget, options);
 
     expect(typeof component).toBe('object');
     expect(component).toEqual(expect.any(Component));
-    expect(component).toEqual({
-      ...componentPrivateAttrs,
-      target: stubTarget,
-      options: componentOpts
-    });
+    expect(component._sfType).toEqual(SFIOC.ELEMENT);
+    expect(component._sfElementType).toEqual(ElementTypes.COMPONENT);
+
+    for (let option in options) {
+      expect(component[option]).toEqual(options[option]);
+    }
   });
 
   it('replaces missing options with defaults (without options passed)', () => {
     const component = componentWrapper(stubTarget);
 
-    expect(typeof component.options).toBe('object')
-    expect(component.options).toStrictEqual({
-      type: ComponentTypes.FUNCTION,
-      lifetime: Lifetime.TRANSIENT
-    });
+    expect(component.type).toEqual(ComponentTypes.FUNCTION);
+    expect(component.lifetime).toEqual(Lifetime.TRANSIENT);
   });
 
   it('replaces missing options with defaults (with some options passed)', () => {
@@ -43,65 +36,20 @@ describe('componentWrapper', () => {
       lifetime: Lifetime.SINGLETON
     });
 
-    expect(typeof component.options).toBe('object')
-    expect(component.options).toStrictEqual({
-      type: ComponentTypes.FUNCTION,
-      lifetime: Lifetime.SINGLETON
-    });
+    expect(component.type).toEqual(ComponentTypes.FUNCTION);
+    expect(component.lifetime).toEqual(Lifetime.SINGLETON);
   });
 
-  it('wraps target function correctly', () => {
-    const component = componentWrapper(() => 228, {
-      type: ComponentTypes.FUNCTION
-    });
+  it('does not throw any error when called without params', () => {
+    const component = componentWrapper();
 
-    expect(typeof component.target).toBe('function');
-    expect(component.target()).toBe(228);
-  });
-
-  it('wraps target class correctly', () => {
-    class TestClass { getSomeValue = () => 228; }
-
-    const component = componentWrapper(TestClass, {
-      type: ComponentTypes.CLASS
-    })
-
-    expect(typeof component.target).toBe('function')
-    expect(new component.target().getSomeValue()).toBe(228);
-  });
-
-  it('wraps target value correctly', () => {
-    const component = componentWrapper(228, {
-      type: ComponentTypes.VALUE
-    });
-
-    expect(typeof component.target).toBe('function')
-    expect(component.target()).toBe(228);
-  });
-
-  it('throws an SfiocTypeError when called without params', () => {
-    const error = catchError(() => componentWrapper());
-
-    expect(error).toBeTruthy();
-    expect(error).toBeInstanceOf(SfiocTypeError);
-    expect(error.message).toContain('undefined');
-  });
-
-  it('throws an SfiocTypeError when the target doesn\'t match its type', () => {
-    const error = catchError(() => {
-      componentWrapper('wrongTarget', {
-        type: ComponentTypes.FUNCTION
-      });
-    });
-
-    expect(error).toBeTruthy();
-    expect(error).toBeInstanceOf(SfiocTypeError);
-    expect(error.message).toContain('wrongTarget');
+    expect(component).toBeTruthy();
+    expect(component.target).toEqual(undefined);
   });
 
   it('throws an SfiocTypeError when the lifetime is unknown', () => {
     const error = catchError(() => {
-      componentWrapper(stubTarget, { lifetime: '228' })
+      componentWrapper(stubTarget, { lifetime: '228' });
     });
 
     expect(error).toBeTruthy();
@@ -111,11 +59,59 @@ describe('componentWrapper', () => {
 
   it('throws an SfiocTypeError when the type is unknown', () => {
     const error = catchError(() => {
-      componentWrapper(stubTarget, { type: '228' })
+      componentWrapper(stubTarget, { type: '228' });
     });
 
     expect(error).toBeTruthy();
     expect(error).toBeInstanceOf(SfiocTypeError);
     expect(error.message).toContain('228');
+  });
+});
+
+describe('builder options', () => {
+  describe('singleton', () => {
+    it(`changes component 'lifetime' to 'SINGLETON'`, () => {
+      const component = componentWrapper(stubTarget).singleton();
+      expect(component.lifetime).toEqual(Lifetime.SINGLETON);
+    });
+  });
+
+  describe('transient', () => {
+    it(`changes component 'lifetime' to 'TRANSIENT'`, () => {
+      const component = componentWrapper(stubTarget)
+                          .singleton()
+                          .transient();
+      expect(component.lifetime).toEqual(Lifetime.TRANSIENT);
+    });
+  });
+
+  describe('fn', () => {
+    let valueGetter = () => 228;
+
+    it(`changes component 'type' to 'FUNCTION'`, () => {
+      const component = componentWrapper(valueGetter).fn();
+
+      expect(component.type).toEqual(ComponentTypes.FUNCTION);
+    });
+  });
+
+  describe('value', () => {
+    let value = 228;
+
+    it(`changes component 'type' to 'VALUE'`, () => {
+      const component = componentWrapper(value).value();
+
+      expect(component.type).toEqual(ComponentTypes.VALUE);
+    });
+  });
+
+  describe('class', () => {
+    class TestClass { getValue = () => 228 }
+
+    it(`changes component 'type' to 'CLASS'`, () => {
+      const component = componentWrapper(TestClass).class();
+
+      expect(component.type).toEqual(ComponentTypes.CLASS);
+    });
   });
 });

@@ -19,11 +19,14 @@ function createContainer() {
   // Storage for all registered registrations.
   const registrations = {};
 
-  // Storage for currently resolved dependencies.
+  // Storage for currently resolved registrations.
   const resolutionStack = [];
 
   // Storage for resolved dependencies with 'SINGLETON' lifetime.
   const cache = new Map();
+
+  // Registration that is currently resolving.
+  let registration = null;
 
   // Container itself.
   const container = {
@@ -105,13 +108,13 @@ function createContainer() {
    * Whatever was resolved.
    */
   function resolve(name) {
-    let registration = registrations[name];
+    registration = registrations[name];
 
     if (!registration) {
       throw new SfiocResolutionError(name, resolutionStack);
     }
 
-    if (resolutionStack.indexOf(name) > -1) {
+    if (R.find(R.propEq('id', name), resolutionStack)) {
       throw new SfiocResolutionError(
         name,
         resolutionStack,
@@ -119,18 +122,18 @@ function createContainer() {
       );
     }
 
-    resolutionStack.push(name);
+    resolutionStack.push(registration);
 
     let resolved, cached;
     switch (registration.lifetime) {
       case Lifetime.TRANSIENT: {
-        resolved = _resolveRegistration(registration);
+        resolved = resolveRegistration();
         break;
       }
       case Lifetime.SINGLETON: {
         cached = cache.get(name);
         if (!cached) {
-          resolved = _resolveRegistration(registration);
+          resolved = resolveRegistration();
           cache.set(name, resolved);
         } else {
           resolved = cached;
@@ -147,6 +150,8 @@ function createContainer() {
     }
 
     resolutionStack.pop();
+    registration = R.last(resolutionStack);
+
     return resolved;
   }
 
@@ -159,13 +164,12 @@ function createContainer() {
    * @return {any}
    * Whatever was resolved.
    */
-  function _resolveRegistration(registration) {
+  function resolveRegistration() {
     let resolvedTarget;
 
     async.seq(
-      next => next(null, registration),
-      _prepareTargetDependencies,
-      _resolveTargetDependencies
+      prepareTargetDependencies,
+      resolveTargetDependencies
     )((err, resolvedDependencies) => {
       const { target } = registration;
 
@@ -182,8 +186,6 @@ function createContainer() {
   /**
    * Transforms dependencies of the given registration to an Array.
    *
-   * WARNING: This function is part of a sequential chain of operations.
-   *
    * @param {object} registration
    * The registration.
    *
@@ -193,7 +195,7 @@ function createContainer() {
    * @return {array}
    * Adapted dependencies for further use.
    */
-  function _prepareTargetDependencies(registration, next) {
+  function prepareTargetDependencies(next) {
     return prepare(registration.dependencies, next);
 
     function prepare(dependsOn, next) {
@@ -207,7 +209,7 @@ function createContainer() {
           return next(null, [dependsOn]);
         }
         case 'Function': {
-          const selectors = _generateDependenciesSelectors(registration);
+          const selectors = generateDependenciesSelectors(registration);
           const dependencies = dependsOn(selectors);
 
           // This validation is necessary here, because we just called the
@@ -230,8 +232,6 @@ function createContainer() {
    * 1. Resolves all of the given dependencies (for current registration).
    * 2. Creates a single map with all of the resolved dependencies.
    *
-   * WARNING: This function is part of a sequential chain of operations.
-   *
    * @param {array} dependencies
    * The registration to resolve.
    *
@@ -241,7 +241,7 @@ function createContainer() {
    * @return {object}
    * Map with resolved dependencies that will be injected into the target function.
    */
-  function _resolveTargetDependencies(dependencies, next) {
+  function resolveTargetDependencies(dependencies, next) {
     let resolvedDependencies = {};
     dependencies.forEach(dependency => {
       const resolvedDependency = resolve(dependency);
@@ -261,7 +261,7 @@ function createContainer() {
    * @return {object}
    * Ready selectors.
    */
-  function _generateDependenciesSelectors(exclude = {}) {
+  function generateDependenciesSelectors(exclude = {}) {
     let selectors = {};
 
     Object.values(registrations).forEach(registration => {

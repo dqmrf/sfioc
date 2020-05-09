@@ -1,4 +1,11 @@
-const { SFIOC } = require('./constants');
+const t = require('./infra/tcomb');
+const { SFIOC, ComponentTypes } = require('./constants');
+
+const targetHandler = t.createHandler({
+  description: 'Sfioc.Registration',
+  validator: t.Function,
+  paramName: 'target'
+});
 
 /**
  * Creates the container registration.
@@ -17,10 +24,29 @@ function createRegistration(component, options = {}) {
     _sfType: SFIOC.REGISTRATION,
     id: options.id,
     groupId: options.groupId || null,
-    target: component.target,
-    lifetime: component.options.lifetime,
-    dependencies: component.options.dependsOn
+    target: prepareTarget(),
+    lifetime: component.lifetime,
+    dependencies: component.dependsOn
   };
+
+  function prepareTarget() {
+    const { target, type } = component;
+
+    switch(type) {
+      case ComponentTypes.FUNCTION:
+        targetHandler.handle(target);
+        return target;
+      case ComponentTypes.CLASS:
+        targetHandler.handle(target);
+        return newClass;
+      case ComponentTypes.VALUE:
+        return () => target;
+    }
+
+    function newClass() {
+      return Reflect.construct(target, arguments);
+    }
+  }
 }
 
 module.exports = {

@@ -17,34 +17,54 @@ const optionsHandler = handler.extend({
   defaults: defaultOptions
 });
 
-const targetHandler = handler.extend({
-  validator: t.Function,
-  paramName: 'target'
-});
-
 class Component {
   constructor(target, options = {}) {
-    this._sfType = SFIOC.ELEMENT;
-    this._sfElementType = ElementTypes.COMPONENT;
-    this.options = optionsHandler.handle(options).value;
-    this.target = prepareTarget(target, this.options.type);
-  }
-}
+    options = optionsHandler.handle(options).value;
 
-function prepareTarget(target, targetType) {
-  switch(targetType) {
-    case ComponentTypes.FUNCTION:
-      targetHandler.handle(target);
-      return target;
-    case ComponentTypes.CLASS:
-      targetHandler.handle(target);
-      return newClass;
-    case ComponentTypes.VALUE:
-      return () => target;
+    Object.defineProperties(this, {
+      '_sfType': {
+        value: SFIOC.ELEMENT,
+        enumerable: true,
+        configurable: false,
+        writable: false
+      },
+      '_sfElementType': {
+        value: ElementTypes.COMPONENT,
+        enumerable: true,
+        configurable: false,
+        writable: false
+      }
+    });
+
+    this.target = target;
+    this.type = options.type;
+    this.lifetime = options.lifetime;
+    this.dependsOn = options.dependsOn;
   }
 
-  function newClass() {
-    return Reflect.construct(target, arguments);
+  update(attr, value) {
+    this[attr] = value;
+    return this;
+  }
+
+  singleton() {
+    return this.update('lifetime', Lifetime.SINGLETON);
+  }
+
+  transient() {
+    return this.update('lifetime', Lifetime.TRANSIENT);
+  }
+
+  fn() {
+    return this.update('type', ComponentTypes.FUNCTION);
+  }
+
+  value() {
+    return this.update('type', ComponentTypes.VALUE);
+  }
+
+  class() {
+    return this.update('type', ComponentTypes.CLASS);
   }
 }
 

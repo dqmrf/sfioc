@@ -67,8 +67,10 @@ class SfiocResolutionError extends SfiocError {
     inputMessage,
   ) {
     resolutionStack = resolutionStack.slice();
-    resolutionStack.push(name);
-    const resolutionPathString = resolutionStack.join(' -> ');
+    const resolutionStackIds = resolutionStack.map(s => s.id);
+    resolutionStackIds.push(name);
+    const resolutionPathString = resolutionStackIds.join(' -> ');
+
     let message = `Could not resolve '${name}'.`;
     if (inputMessage) message += ` ${inputMessage}`;
     message += EOL + EOL;

@@ -22,15 +22,18 @@ Element.define(t.refinement(t.Object, (obj) => {
 
 Elements.define(t.dict(t.String, Element));
 
+const ComponentDependency = t.refinement(t.String, str => !R.isEmpty(str), 'Dependency');
+const ComponentDependencies = t.union([ComponentDependency, t.list(ComponentDependency)]);
+
+// TODO: ?DRY?
 Component.define(t.struct({
   _sfType: ElementIdentifier,
   _sfElementType: ComponentIdentifier,
-  target: t.Function,
-  options: ComponentOptions
+  type: ComponentTypesEnums,
+  lifetime: LifetimeEnums,
+  dependsOn: t.maybe(t.union([ComponentDependencies, t.Function]))
 }));
 
-const ComponentDependency = t.refinement(t.String, str => !R.isEmpty(str), 'Dependency');
-const ComponentDependencies = t.union([ComponentDependency, t.list(ComponentDependency)]);
 ComponentOptions.define(t.struct({
   type: ComponentTypesEnums,
   lifetime: LifetimeEnums,
