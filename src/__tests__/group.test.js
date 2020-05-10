@@ -1,15 +1,10 @@
 const { catchError } = require('../utils');
 const { SfiocTypeError } = require('../errors');
-const { groupWrapper, Group } = require('../group');
+const { groupWrapper } = require('../group');
 const { componentWrapper } = require('../component');
-const { ElementTypes, SFIOC } = require('../constants');
+const { ElementTypes, Lifetime, SFIOC } = require('../constants');
 
 const stubTarget = jest.fn();
-
-const groupPrivateAttrs = {
-  _sfType: SFIOC.ELEMENT,
-  _sfElementType: ElementTypes.GROUP,
-}
 
 describe('groupWrapper', () => {
   it('returns a group with its components', () => {
@@ -18,13 +13,11 @@ describe('groupWrapper', () => {
     const group = groupWrapper({ component1, component2 });
 
     expect(typeof group).toBe('object');
-    expect(group).toEqual(expect.any(Group));
-    expect(group).toEqual({
-      ...groupPrivateAttrs,
-      elements: {
-        component1,
-        component2
-      }
+    expect(group._sfType).toEqual(SFIOC.ELEMENT);
+    expect(group._sfElementType).toEqual(ElementTypes.GROUP);
+    expect(group.elements).toStrictEqual({
+      component1,
+      component2
     });
   });
 
@@ -46,20 +39,10 @@ describe('groupWrapper', () => {
     });
 
     expect(typeof group).toBe('object');
-    expect(group).toEqual(expect.any(Group));
-    expect(group).toEqual({
-      ...groupPrivateAttrs,
-      elements: {
-        component1,
-        component2,
-        nestedGroup: {
-          ...groupPrivateAttrs,
-          elements: {
-            nestedComponent1,
-            nestedComponent2
-          }
-        }
-      }
+    expect(group.elements).toStrictEqual({
+      component1,
+      component2,
+      nestedGroup
     });
   });
 
@@ -77,5 +60,25 @@ describe('groupWrapper', () => {
     expect(error).toBeTruthy();
     expect(error).toBeInstanceOf(SfiocTypeError);
     expect(error.message).toContain('wrongParam');
+  });
+});
+
+describe('builder options', () => {
+  it(`changes all nested components attributes properly`, () => {
+    const nestedComponent1 = componentWrapper(stubTarget).transient();
+    const nestedComponent2 = componentWrapper(stubTarget).transient();
+    const component1 = componentWrapper(stubTarget).transient();
+    const component2 = componentWrapper(stubTarget).transient();
+
+    const nestedGroup = groupWrapper({ nestedComponent1, nestedComponent2 }).transient();
+    const group = groupWrapper({ component1, component2, nestedGroup }).singleton();
+
+    const elements = group.elements;
+    const nestedElements = elements.nestedGroup.elements;
+
+    expect(elements.component1.lifetime).toEqual(Lifetime.SINGLETON);
+    expect(elements.component2.lifetime).toEqual(Lifetime.SINGLETON);
+    expect(nestedElements.nestedComponent1.lifetime).toEqual(Lifetime.SINGLETON);
+    expect(nestedElements.nestedComponent2.lifetime).toEqual(Lifetime.SINGLETON);
   });
 });
