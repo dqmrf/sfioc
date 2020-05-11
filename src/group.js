@@ -45,26 +45,6 @@ function groupWrapper(elements, options = {}) {
   return createBuildOptions(group, updateComponentOptions);
 }
 
-function updateChildren(context, inputOptions) {
-  const { elements } = context;
-
-  for (let elementName in elements) {
-    let element = elements[elementName];
-
-    switch(U.getElementType(element)) {
-      case ElementTypes.COMPONENT:
-        updateOptions(element, inputOptions);
-        break;
-      case ElementTypes.GROUP:
-        updateChildren(element, inputOptions);
-        break;
-    }
-  }
-
-  return context;
-}
-
 module.exports = {
-  groupWrapper,
-  // updateChildren
+  groupWrapper
 };
