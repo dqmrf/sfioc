@@ -17,7 +17,7 @@ const handler = t.createHandler({
  * @return {object}
  * Container 'GROUP' element that can be registered.
  */
-function groupWrapper(elements) {
+function groupWrapper(elements, options = {}) {
   const group = {
     elements: handler.handle(elements, {
       validator: t.Object,
@@ -40,6 +40,7 @@ function groupWrapper(elements) {
     }
   });
 
+  updateChildren(group, options);
   return createBuildOptions(group, updateChildren);
 }
 

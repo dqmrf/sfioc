@@ -97,4 +97,34 @@ describe('groupWrapper', () => {
       expect(nestedElements.nestedComponent1.type).toEqual(ComponentTypes.CLASS);
     });
   });
+
+  it(`lets me setup child options without builders`, () => {
+    const nestedComponent1 = componentWrapper(stubTarget).class();
+    const nestedComponent2 = componentWrapper(stubTarget).class();
+    const component1 = componentWrapper(228).value().class();
+    const component2 = componentWrapper(stubTarget).class();
+
+    const nestedGroup = groupWrapper({
+      nestedComponent1,
+      nestedComponent2
+    }).transient();
+
+    const group = groupWrapper({
+      component1,
+      component2,
+      nestedGroup
+    }, {
+      lifetime: Lifetime.SINGLETON,
+      type: ComponentTypes.FUNCTION
+    });
+
+    const elements = group.elements;
+    const nestedElements = elements.nestedGroup.elements;
+
+    expect(elements.component1.lifetime).toEqual(Lifetime.SINGLETON);
+    expect(nestedElements.nestedComponent1.lifetime).toEqual(Lifetime.SINGLETON);
+
+    expect(elements.component2.type).toEqual(ComponentTypes.FUNCTION);
+    expect(nestedElements.nestedComponent2.type).toEqual(ComponentTypes.FUNCTION);
+  });
 });
