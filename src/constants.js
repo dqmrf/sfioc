@@ -19,9 +19,12 @@ const Lifetime = {
   SINGLETON: 'SINGLETON'
 }
 
+const COMPONENT_OPTIONS = 'componentOptions';
+
 module.exports = {
   SFIOC,
   ElementTypes,
   ComponentTypes,
-  Lifetime
+  Lifetime,
+  COMPONENT_OPTIONS
 }

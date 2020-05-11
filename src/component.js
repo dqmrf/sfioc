@@ -1,15 +1,16 @@
+const R = require('ramda');
 const t = require('./infra/tcomb');
 const { ComponentOptions } = require('./structures');
 const { createBuildOptions } = require('./buildOptions');
-const { ComponentTypes, Lifetime, ElementTypes, SFIOC } = require('./constants');
+const {
+  ComponentTypes, Lifetime, ElementTypes, SFIOC, COMPONENT_OPTIONS
+ } = require('./constants');
 
-const configurableOptions = [
-  'type', 'lifetime', 'dependsOn'
-];
-
-const handler = t.createHandler({
-  description: 'Sfioc.Component'
-});
+const componentOptionsDefaults = {
+  type: ComponentTypes.FUNCTION,
+  lifetime: Lifetime.TRANSIENT,
+  dependsOn: null
+}
 
 /**
  * Prepares the dependency for registration.
@@ -26,9 +27,7 @@ const handler = t.createHandler({
 function componentWrapper(target, options = {}) {
   const component = {
     target,
-    type: ComponentTypes.FUNCTION,
-    lifetime: Lifetime.TRANSIENT,
-    dependsOn: null
+    [COMPONENT_OPTIONS]: R.clone(componentOptionsDefaults)
   };
 
   Object.defineProperties(component, {
@@ -46,22 +45,26 @@ function componentWrapper(target, options = {}) {
     }
   });
 
-  updateOptions(component, options);
-  return createBuildOptions(component, updateOptions);
+  updateComponentOptions(component, options);
+  return createBuildOptions(component, updateComponentOptions);
 }
 
-function updateOptions(context, newOptions) {
-  handler.handle(newOptions, {
+function updateComponentOptions(source, newOptions) {
+  t.handle(newOptions, {
     validator: ComponentOptions,
-    paramName: 'options'
+    paramName: COMPONENT_OPTIONS
   });
-  return Object.assign(context, filterOptions(newOptions));
+
+  return Object.assign(
+    source[COMPONENT_OPTIONS],
+    filterComponentOptions(newOptions)
+  );
 }
 
-function filterOptions(options) {
+function filterComponentOptions(options) {
   const result = {};
   for (let optionName in options) {
-    if (!configurableOptions.includes(optionName)) continue;
+    if (!componentOptionsDefaults.hasOwnProperty(optionName)) continue;
     result[optionName] = options[optionName];
   }
   return result;
@@ -69,5 +72,5 @@ function filterOptions(options) {
 
 module.exports = {
   componentWrapper,
-  updateOptions
+  updateComponentOptions
 };

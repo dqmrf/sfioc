@@ -2,7 +2,7 @@ const R = require('ramda');
 const async = require('async');
 const U = require('./utils');
 const t = require('./infra/tcomb');
-const { Lifetime, ElementTypes } = require('./constants');
+const { Lifetime, ElementTypes, COMPONENT_OPTIONS } = require('./constants');
 const { SfiocResolutionError } = require('./errors');
 const { Elements, ComponentDependencies } = require('./structures');
 const { createRegistration } = require('./registration');
@@ -72,13 +72,21 @@ function createContainer() {
    * @return {object}
    * The container.
    */
-  function _register(elements, options = {}) {
+  function _register(elements, options = {
+    groupId: null,
+    parentGroup: {}
+  }) {
     const elementNames = Object.keys(elements);
     const { groupId } = options;
 
     for (const elementName of elementNames) {
       const element = elements[elementName];
       const elementId = U.joinRight([groupId, elementName], '.');
+
+      Object.assign(
+        element[COMPONENT_OPTIONS],
+        options.parentGroup[COMPONENT_OPTIONS]
+      );
 
       switch(U.getElementType(element)) {
         case COMPONENT: {
@@ -89,7 +97,11 @@ function createContainer() {
           break;
         }
         case GROUP: {
-          _register(element.elements, { groupId: elementId });
+          _register(
+            element.elements, {
+            groupId: elementId,
+            parentGroup: element
+          });
           break;
         }
       }

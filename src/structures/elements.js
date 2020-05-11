@@ -1,14 +1,13 @@
 const R = require('ramda');
 const t = require('../infra/tcomb');
 const { LifetimeEnums, ComponentTypesEnums } = require('./enums');
-const { ElementTypes, ComponentTypes, Lifetime, SFIOC } = require('../constants');
+const { ElementTypes, SFIOC, COMPONENT_OPTIONS } = require('../constants');
 
 const Element = t.declare('Component | Group');
 const Elements = t.declare('Elements');
 const Component = t.declare('Component');
 const ComponentOptions = t.declare('ComponentOptions');
 const Group = t.declare('Group');
-const GroupRecursive = t.declare('GroupRecursive');
 
 const ElementIdentifier = t.refinement(t.String, x => x === SFIOC.ELEMENT);
 const ComponentIdentifier = t.refinement(t.String, x => x === ElementTypes.COMPONENT);
@@ -29,9 +28,7 @@ const ComponentDependencies = t.union([ComponentDependency, t.list(ComponentDepe
 Component.define(t.struct({
   _sfType: ElementIdentifier,
   _sfElementType: ComponentIdentifier,
-  type: ComponentTypesEnums,
-  lifetime: LifetimeEnums,
-  dependsOn: t.maybe(t.union([ComponentDependencies, t.Function]))
+  [COMPONENT_OPTIONS]: ComponentOptions
 }));
 
 ComponentOptions.define(t.struct({
@@ -43,13 +40,8 @@ ComponentOptions.define(t.struct({
 Group.define(t.struct({
   _sfType: ElementIdentifier,
   _sfElementType: GroupIdentifier,
-  elements: t.Object
-}));
-
-GroupRecursive.define(t.struct({
-  _sfType: ElementIdentifier,
-  _sfElementType: GroupIdentifier,
-  elements: Elements
+  elements: t.Object,
+  [COMPONENT_OPTIONS]: ComponentOptions
 }));
 
 module.exports = {
@@ -58,6 +50,5 @@ module.exports = {
   ComponentOptions,
   Component,
   ComponentDependencies,
-  Group,
-  GroupRecursive
+  Group
 };

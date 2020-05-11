@@ -1,5 +1,5 @@
 const t = require('./infra/tcomb');
-const { SFIOC, ComponentTypes } = require('./constants');
+const { SFIOC, ComponentTypes, COMPONENT_OPTIONS } = require('./constants');
 
 const targetHandler = t.createHandler({
   description: 'Sfioc.Registration',
@@ -20,19 +20,21 @@ const targetHandler = t.createHandler({
  * Registration that will be pushed in the containers' 'registrations' storage.
  */
 function createRegistration(component, options = {}) {
+  const componentOpts = component[COMPONENT_OPTIONS];
+
   return {
     _sfType: SFIOC.REGISTRATION,
     id: options.id,
     groupId: options.groupId || null,
     target: prepareTarget(),
-    lifetime: component.lifetime,
-    dependencies: component.dependsOn
+    lifetime: componentOpts.lifetime,
+    dependencies: componentOpts.dependsOn
   };
 
   function prepareTarget() {
-    const { target, type } = component;
+    const { target } = component;
 
-    switch(type) {
+    switch(componentOpts.type) {
       case ComponentTypes.FUNCTION:
         targetHandler.handle(target);
         return target;

@@ -1,7 +1,9 @@
 const { catchError } = require('../utils');
 const { SfiocTypeError } = require('../errors');
 const { componentWrapper } = require('../component');
-const { ComponentTypes, Lifetime, ElementTypes, SFIOC } = require('../constants');
+const {
+  ComponentTypes, Lifetime, ElementTypes, SFIOC, COMPONENT_OPTIONS
+} = require('../constants');
 
 const stubTarget = jest.fn();
 
@@ -17,26 +19,25 @@ describe('componentWrapper', () => {
     expect(typeof component).toBe('object');
     expect(component._sfType).toEqual(SFIOC.ELEMENT);
     expect(component._sfElementType).toEqual(ElementTypes.COMPONENT);
-
-    for (let option in options) {
-      expect(component[option]).toEqual(options[option]);
-    }
+    expect(component[COMPONENT_OPTIONS]).toStrictEqual(options)
   });
 
   it('replaces missing options with defaults (without options passed)', () => {
     const component = componentWrapper(stubTarget);
+    const componentOpts = component[COMPONENT_OPTIONS];
 
-    expect(component.type).toEqual(ComponentTypes.FUNCTION);
-    expect(component.lifetime).toEqual(Lifetime.TRANSIENT);
+    expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
+    expect(componentOpts.lifetime).toEqual(Lifetime.TRANSIENT);
   });
 
   it('replaces missing options with defaults (with some options passed)', () => {
     const component = componentWrapper(stubTarget, {
       lifetime: Lifetime.SINGLETON
     });
+    const componentOpts = component[COMPONENT_OPTIONS];
 
-    expect(component.type).toEqual(ComponentTypes.FUNCTION);
-    expect(component.lifetime).toEqual(Lifetime.SINGLETON);
+    expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
+    expect(componentOpts.lifetime).toEqual(Lifetime.SINGLETON);
   });
 
   it(`removes unnecessary options, thay don't break anything`, () => {
@@ -46,10 +47,11 @@ describe('componentWrapper', () => {
       someShit: 'javascript'
     }
     const component = componentWrapper(stubTarget, options);
+    const componentOpts = component[COMPONENT_OPTIONS];
 
-    expect(component.type).toEqual(ComponentTypes.FUNCTION);
-    expect(component.lifetime).toEqual(Lifetime.SINGLETON);
-    expect(component.someShit).toEqual(undefined);
+    expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
+    expect(componentOpts.lifetime).toEqual(Lifetime.SINGLETON);
+    expect(componentOpts.someShit).toEqual(undefined);
   });
 
   it('does not throw any error when called without params', () => {
@@ -83,15 +85,17 @@ describe('componentWrapper', () => {
 describe('builder options', () => {
   it(`lets me call a chain of builders`, () => {
     const component = componentWrapper(class Lol {}).singleton().class();
+    const componentOpts = component[COMPONENT_OPTIONS];
 
-    expect(component.lifetime).toEqual(Lifetime.SINGLETON);
-    expect(component.type).toEqual(ComponentTypes.CLASS);
+    expect(componentOpts.lifetime).toEqual(Lifetime.SINGLETON);
+    expect(componentOpts.type).toEqual(ComponentTypes.CLASS);
   });
 
   describe('singleton', () => {
     it(`changes component 'lifetime' to 'SINGLETON'`, () => {
       const component = componentWrapper(stubTarget).singleton();
-      expect(component.lifetime).toEqual(Lifetime.SINGLETON);
+      const componentOpts = component[COMPONENT_OPTIONS];
+      expect(componentOpts.lifetime).toEqual(Lifetime.SINGLETON);
     });
   });
 
@@ -100,7 +104,8 @@ describe('builder options', () => {
       const component = componentWrapper(stubTarget)
                           .singleton()
                           .transient();
-      expect(component.lifetime).toEqual(Lifetime.TRANSIENT);
+      const componentOpts = component[COMPONENT_OPTIONS];
+      expect(componentOpts.lifetime).toEqual(Lifetime.TRANSIENT);
     });
   });
 
@@ -109,8 +114,8 @@ describe('builder options', () => {
 
     it(`changes component 'type' to 'FUNCTION'`, () => {
       const component = componentWrapper(valueGetter).fn();
-
-      expect(component.type).toEqual(ComponentTypes.FUNCTION);
+      const componentOpts = component[COMPONENT_OPTIONS];
+      expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
     });
   });
 
@@ -119,8 +124,8 @@ describe('builder options', () => {
 
     it(`changes component 'type' to 'VALUE'`, () => {
       const component = componentWrapper(value).value();
-
-      expect(component.type).toEqual(ComponentTypes.VALUE);
+      const componentOpts = component[COMPONENT_OPTIONS];
+      expect(componentOpts.type).toEqual(ComponentTypes.VALUE);
     });
   });
 
@@ -129,8 +134,8 @@ describe('builder options', () => {
 
     it(`changes component 'type' to 'CLASS'`, () => {
       const component = componentWrapper(TestClass).class();
-
-      expect(component.type).toEqual(ComponentTypes.CLASS);
+      const componentOpts = component[COMPONENT_OPTIONS];
+      expect(componentOpts.type).toEqual(ComponentTypes.CLASS);
     });
   });
 });

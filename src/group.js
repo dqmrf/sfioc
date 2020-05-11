@@ -1,8 +1,8 @@
 const U = require('./utils');
 const t = require('./infra/tcomb');
-const { updateOptions } = require('./component');
 const { createBuildOptions } = require('./buildOptions');
-const { ElementTypes, SFIOC } = require('./constants');
+const { updateComponentOptions } = require('./component');
+const { ElementTypes, SFIOC, COMPONENT_OPTIONS } = require('./constants');
 
 const handler = t.createHandler({
   description: 'Sfioc.Group'
@@ -22,7 +22,8 @@ function groupWrapper(elements, options = {}) {
     elements: handler.handle(elements, {
       validator: t.Object,
       paramName: 'elements'
-    }).value
+    }).value,
+    [COMPONENT_OPTIONS]: {}
   };
 
   Object.defineProperties(group, {
@@ -40,11 +41,11 @@ function groupWrapper(elements, options = {}) {
     }
   });
 
-  updateChildren(group, options);
-  return createBuildOptions(group, updateChildren);
+  updateComponentOptions(group, options);
+  return createBuildOptions(group, updateComponentOptions);
 }
 
-function updateChildren(context, inputAttrs) {
+function updateChildren(context, inputOptions) {
   const { elements } = context;
 
   for (let elementName in elements) {
@@ -52,10 +53,10 @@ function updateChildren(context, inputAttrs) {
 
     switch(U.getElementType(element)) {
       case ElementTypes.COMPONENT:
-        updateOptions(element, inputAttrs);
+        updateOptions(element, inputOptions);
         break;
       case ElementTypes.GROUP:
-        updateChildren(element, inputAttrs);
+        updateChildren(element, inputOptions);
         break;
     }
   }
@@ -65,5 +66,5 @@ function updateChildren(context, inputAttrs) {
 
 module.exports = {
   groupWrapper,
-  updateChildren
+  // updateChildren
 };

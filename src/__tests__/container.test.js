@@ -2,11 +2,12 @@ const { catchError } = require('../utils');
 const { createContainer } = require('../container');
 const { groupWrapper } = require('../group');
 const { componentWrapper } = require('../component');
-const { ComponentTypes, Lifetime } = require('../constants');
 const { SfiocResolutionError, SfiocTypeError } = require('../errors');
+const { ComponentTypes, Lifetime, COMPONENT_OPTIONS } = require('../constants');
 
 const testValue = 228;
 const testValueGetterProvider = ({ testValue }) => () => testValue;
+const stubTarget = jest.fn();
 
 describe('createContainer', () => {
   it('returns an object', () => {
@@ -19,15 +20,19 @@ describe('container', () => {
   it('lets me register components and resolve them', () => {
     let container = createContainer();
 
+    const testValueComponent = componentWrapper(testValue, {
+      type: ComponentTypes.VALUE
+    });
+
+    const getTestValueComponent = componentWrapper(
+      testValueGetterProvider, {
+      type: ComponentTypes.FUNCTION,
+      dependsOn: ['testValue']
+    });
+
     container.register({
-      testValue: componentWrapper(testValue, {
-        type: ComponentTypes.VALUE
-      }),
-      getTestValue: componentWrapper(
-        testValueGetterProvider, {
-        type: ComponentTypes.FUNCTION,
-        dependsOn: ['testValue']
-      })
+      testValue: testValueComponent,
+      getTestValue: getTestValueComponent
     });
 
     const getTestValue = container.resolve('getTestValue');
@@ -163,6 +168,48 @@ describe('container', () => {
 
       const app = container.resolve('app');
       expect(app.stuff()).toBe('stuff');
+    });
+
+    it(`overwrites '${COMPONENT_OPTIONS}' of groups nested components`, () => {
+      const component1 = componentWrapper(stubTarget).transient();
+      const component2 = componentWrapper(stubTarget).transient();
+
+      const group = groupWrapper(
+        { component1, component2 },
+        { lifetime: Lifetime.SINGLETON }
+      );
+
+      container.register({ group });
+      const { registrations } = container;
+
+      Object.values(registrations).forEach(registration => {
+        expect(registration.lifetime).toEqual(Lifetime.SINGLETON);
+      });
+    });
+
+    it(`overwrites '${COMPONENT_OPTIONS}' of groups nested groups with its components`, () => {
+      const nestedComponent1 = componentWrapper(stubTarget).transient();
+      const nestedComponent2 = componentWrapper(stubTarget).class();
+      const component1 = componentWrapper(stubTarget).value().singleton();
+      const component2 = componentWrapper(stubTarget).class().singleton();
+
+      const nestedGroup = groupWrapper({
+        nestedComponent1,
+        nestedComponent2
+      }).transient();
+
+      const group = groupWrapper({
+        component1,
+        component2,
+        nestedGroup
+      }).singleton().fn();
+
+      container.register({ group });
+      const { registrations } = container;
+
+      Object.values(registrations).forEach(registration => {
+        expect(registration.lifetime).toEqual(Lifetime.SINGLETON);
+      });
     });
   });
 

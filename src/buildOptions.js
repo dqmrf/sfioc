@@ -12,9 +12,9 @@ const { ComponentTypes, Lifetime } = require('./constants');
  * @return {object}
  * Container element with options added.
  */
-function createBuildOptions(element, update) {
-  const result = {
-    ...element,
+function createBuildOptions(source, updateSource) {
+  const builder = {
+    ...source,
     setLifetime,
     singleton: partial(setLifetime, Lifetime.SINGLETON),
     transient: partial(setLifetime, Lifetime.TRANSIENT),
@@ -23,14 +23,19 @@ function createBuildOptions(element, update) {
     class: partial(setType, ComponentTypes.CLASS)
   }
 
-  return result;
+  return builder;
 
   function setLifetime(value) {
-    return update(this, { 'lifetime': value });
+    return update('lifetime', value);
   }
 
   function setType(value) {
-    return update(this, { 'type': value });
+    return update('type', value);
+  }
+
+  function update(name, value) {
+    updateSource(source, { [name]: value });
+    return builder;
   }
 }
 
