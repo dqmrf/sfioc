@@ -72,16 +72,13 @@ function createContainer() {
    * @return {object}
    * The container.
    */
-  function _register(elements, options = {
-    groupId: null,
-    parentGroup: {}
-  }) {
+  function _register(elements, options = { parentGroup: {} }) {
     const elementNames = Object.keys(elements);
-    const { groupId } = options;
+    const { parentGroup } = options;
 
     for (const elementName of elementNames) {
       const element = elements[elementName];
-      const elementId = U.joinRight([groupId, elementName], '.');
+      const elementId = U.joinRight([parentGroup.id, elementName], '.');
 
       Object.assign(
         element[COMPONENT_OPTIONS],
@@ -91,16 +88,19 @@ function createContainer() {
       switch(U.getElementType(element)) {
         case COMPONENT: {
           registrations[elementId] = createRegistration(
-            element,
-            { id: elementId, groupId }
-          );
+            element, {
+            id: elementId,
+            groupId: parentGroup.id
+          });
           break;
         }
         case GROUP: {
           _register(
             element.elements, {
-            groupId: elementId,
-            parentGroup: element
+            parentGroup: {
+              ...element,
+              id: elementId
+            }
           });
           break;
         }
