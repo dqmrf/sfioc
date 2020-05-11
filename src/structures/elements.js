@@ -35,8 +35,8 @@ Component.define(t.struct({
 }));
 
 ComponentOptions.define(t.struct({
-  type: ComponentTypesEnums,
-  lifetime: LifetimeEnums,
+  type: t.maybe(ComponentTypesEnums),
+  lifetime: t.maybe(LifetimeEnums),
   dependsOn: t.maybe(t.union([ComponentDependencies, t.Function]))
 }));
 

@@ -26,11 +26,11 @@ function createBuildOptions(element, update) {
   return result;
 
   function setLifetime(value) {
-    return update(this, 'lifetime', value);
+    return update(this, { 'lifetime': value });
   }
 
   function setType(value) {
-    return update(this, 'type', value);
+    return update(this, { 'type': value });
   }
 }
 

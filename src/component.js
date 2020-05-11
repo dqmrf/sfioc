@@ -3,39 +3,12 @@ const { ComponentOptions } = require('./structures');
 const { createBuildOptions } = require('./buildOptions');
 const { ComponentTypes, Lifetime, ElementTypes, SFIOC } = require('./constants');
 
-const component = {
-  target: null
-};
-
-Object.defineProperties(component, {
-  '_sfType': {
-    value: SFIOC.ELEMENT,
-    enumerable: true,
-    configurable: false,
-    writable: false
-  },
-  '_sfElementType': {
-    value: ElementTypes.COMPONENT,
-    enumerable: true,
-    configurable: false,
-    writable: false
-  }
-});
-
-const defaultOptions = {
-  type: ComponentTypes.FUNCTION,
-  lifetime: Lifetime.TRANSIENT,
-  dependsOn: null
-}
+const configurableOptions = [
+  'type', 'lifetime', 'dependsOn'
+];
 
 const handler = t.createHandler({
   description: 'Sfioc.Component'
-});
-
-const optionsHandler = handler.extend({
-  validator: ComponentOptions,
-  paramName: 'options',
-  defaults: defaultOptions
 });
 
 /**
@@ -51,23 +24,50 @@ const optionsHandler = handler.extend({
  * Container 'COMPONENT' element that can be registered.
  */
 function componentWrapper(target, options = {}) {
-  options = optionsHandler.handle(options).value;
-
-  Object.assign(component, {
+  const component = {
     target,
-    type: options.type,
-    lifetime: options.lifetime,
-    dependsOn: options.dependsOn
+    type: ComponentTypes.FUNCTION,
+    lifetime: Lifetime.TRANSIENT,
+    dependsOn: null
+  };
+
+  Object.defineProperties(component, {
+    '_sfType': {
+      value: SFIOC.ELEMENT,
+      enumerable: true,
+      configurable: false,
+      writable: false
+    },
+    '_sfElementType': {
+      value: ElementTypes.COMPONENT,
+      enumerable: true,
+      configurable: false,
+      writable: false
+    }
   });
 
-  return createBuildOptions(component, updatingStrategy);
+  updateOptions(component, options);
+  return createBuildOptions(component, updateOptions);
 }
 
-function updatingStrategy(context, attr, newValue) {
-  context[attr] = newValue;
-  return context;
+function updateOptions(context, newOptions) {
+  handler.handle(newOptions, {
+    validator: ComponentOptions,
+    paramName: 'options'
+  });
+  return Object.assign(context, filterOptions(newOptions));
+}
+
+function filterOptions(options) {
+  const result = {};
+  for (let optionName in options) {
+    if (!configurableOptions.includes(optionName)) continue;
+    result[optionName] = options[optionName];
+  }
+  return result;
 }
 
 module.exports = {
-  componentWrapper
+  componentWrapper,
+  updateOptions
 };

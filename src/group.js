@@ -1,34 +1,11 @@
 const U = require('./utils');
 const t = require('./infra/tcomb');
+const { updateOptions } = require('./component');
 const { createBuildOptions } = require('./buildOptions');
 const { ElementTypes, SFIOC } = require('./constants');
 
-const group = {
-  elements: {}
-};
-
-Object.defineProperties(group, {
-  '_sfType': {
-    value: SFIOC.ELEMENT,
-    enumerable: true,
-    configurable: false,
-    writable: false
-  },
-  '_sfElementType': {
-    value: ElementTypes.GROUP,
-    enumerable: true,
-    configurable: false,
-    writable: false
-  }
-});
-
 const handler = t.createHandler({
   description: 'Sfioc.Group'
-});
-
-const elementsHandler = handler.extend({
-  validator: t.Object,
-  paramName: 'elements'
 });
 
 /**
@@ -41,12 +18,32 @@ const elementsHandler = handler.extend({
  * Container 'GROUP' element that can be registered.
  */
 function groupWrapper(elements) {
-  group.elements = elementsHandler.handle(elements).value;
+  const group = {
+    elements: handler.handle(elements, {
+      validator: t.Object,
+      paramName: 'elements'
+    }).value
+  };
 
-  return createBuildOptions(group, updatingStrategy);
+  Object.defineProperties(group, {
+    '_sfType': {
+      value: SFIOC.ELEMENT,
+      enumerable: true,
+      configurable: false,
+      writable: false
+    },
+    '_sfElementType': {
+      value: ElementTypes.GROUP,
+      enumerable: true,
+      configurable: false,
+      writable: false
+    }
+  });
+
+  return createBuildOptions(group, updateChildren);
 }
 
-function updatingStrategy(context, attr, newValue) {
+function updateChildren(context, inputAttrs) {
   const { elements } = context;
 
   for (let elementName in elements) {
@@ -54,10 +51,10 @@ function updatingStrategy(context, attr, newValue) {
 
     switch(U.getElementType(element)) {
       case ElementTypes.COMPONENT:
-        element[attr] = newValue;
+        updateOptions(element, inputAttrs);
         break;
       case ElementTypes.GROUP:
-        updatingStrategy(element, attr, newValue);
+        updateChildren(element, inputAttrs);
         break;
     }
   }
@@ -66,5 +63,6 @@ function updatingStrategy(context, attr, newValue) {
 }
 
 module.exports = {
-  groupWrapper
+  groupWrapper,
+  updateChildren
 };

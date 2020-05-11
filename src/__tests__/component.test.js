@@ -39,6 +39,19 @@ describe('componentWrapper', () => {
     expect(component.lifetime).toEqual(Lifetime.SINGLETON);
   });
 
+  it(`removes unnecessary options, thay don't break anything`, () => {
+    const options = {
+      type: ComponentTypes.FUNCTION,
+      lifetime: Lifetime.SINGLETON,
+      someShit: 'javascript'
+    }
+    const component = componentWrapper(stubTarget, options);
+
+    expect(component.type).toEqual(ComponentTypes.FUNCTION);
+    expect(component.lifetime).toEqual(Lifetime.SINGLETON);
+    expect(component.someShit).toEqual(undefined);
+  });
+
   it('does not throw any error when called without params', () => {
     const component = componentWrapper();
 
@@ -68,6 +81,13 @@ describe('componentWrapper', () => {
 });
 
 describe('builder options', () => {
+  it(`lets me call a chain of builders`, () => {
+    const component = componentWrapper(class Lol {}).singleton().class();
+
+    expect(component.lifetime).toEqual(Lifetime.SINGLETON);
+    expect(component.type).toEqual(ComponentTypes.CLASS);
+  });
+
   describe('singleton', () => {
     it(`changes component 'lifetime' to 'SINGLETON'`, () => {
       const component = componentWrapper(stubTarget).singleton();
