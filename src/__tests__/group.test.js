@@ -3,7 +3,11 @@ const { SfiocTypeError } = require('../errors');
 const { groupWrapper } = require('../group');
 const { componentWrapper } = require('../component');
 const {
-  ElementTypes, Lifetime, ComponentTypes, COMPONENT_OPTIONS, SFIOC
+  ElementTypes,
+  Lifetime,
+  ComponentTypes,
+  ELEMENT,
+  COMPONENT_OPTIONS
 } = require('../constants');
 
 const stubTarget = jest.fn();
@@ -15,7 +19,7 @@ describe('groupWrapper', () => {
     const group = groupWrapper({ component1, component2 });
 
     expect(typeof group).toBe('object');
-    expect(group._sfType).toEqual(SFIOC.ELEMENT);
+    expect(group._sfType).toEqual(ELEMENT);
     expect(group._sfElementType).toEqual(ElementTypes.GROUP);
     expect(group.elements).toStrictEqual({
       component1,

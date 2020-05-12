@@ -1,10 +1,13 @@
 const R = require('ramda');
 const t = require('./infra/tcomb');
 const { ComponentOptions } = require('./structures');
-const { createBuildOptions } = require('./buildOptions');
 const {
-  ComponentTypes, Lifetime, ElementTypes, SFIOC, COMPONENT_OPTIONS
- } = require('./constants');
+  ComponentTypes,
+  Lifetime,
+  ElementTypes,
+  ELEMENT,
+  COMPONENT_OPTIONS
+} = require('./constants');
 
 const componentOptionsDefaults = {
   type: ComponentTypes.FUNCTION,
@@ -32,7 +35,7 @@ function componentWrapper(target, options = {}) {
 
   Object.defineProperties(component, {
     '_sfType': {
-      value: SFIOC.ELEMENT,
+      value: ELEMENT,
       enumerable: true,
       configurable: false,
       writable: false
@@ -46,7 +49,34 @@ function componentWrapper(target, options = {}) {
   });
 
   updateComponentOptions(component, options);
-  return createBuildOptions(component, updateComponentOptions);
+  return createComponentBuildOptions(component);
+}
+
+function createComponentBuildOptions(source) {
+  const builder = {
+    ...source,
+    setLifetime,
+    singleton: partial(setLifetime, Lifetime.SINGLETON),
+    transient: partial(setLifetime, Lifetime.TRANSIENT),
+    fn: partial(setType, ComponentTypes.FUNCTION),
+    value: partial(setType, ComponentTypes.VALUE),
+    class: partial(setType, ComponentTypes.CLASS)
+  }
+
+  return builder;
+
+  function setLifetime(value) {
+    return update('lifetime', value);
+  }
+
+  function setType(value) {
+    return update('type', value);
+  }
+
+  function update(name, value) {
+    updateComponentOptions(source, { [name]: value });
+    return builder;
+  }
 }
 
 function updateComponentOptions(source, inputOptions, ...args) {
@@ -76,8 +106,16 @@ function filterComponentOptions(options) {
   return result;
 }
 
+function partial(fn, ...args) {
+  return function partiallyApplied() {
+    return fn.apply(this, args);
+  }
+}
+
 module.exports = {
   componentWrapper,
   updateComponentOptions,
-  filterComponentOptions
+  filterComponentOptions,
+  createComponentBuildOptions,
+  COMPONENT_OPTIONS
 };

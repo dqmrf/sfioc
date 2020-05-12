@@ -1,5 +1,5 @@
 const t = require('./infra/tcomb');
-const { SFIOC, ComponentTypes, COMPONENT_OPTIONS } = require('./constants');
+const { ComponentTypes, REGISTRATION, COMPONENT_OPTIONS } = require('./constants');
 
 const targetHandler = t.createHandler({
   description: 'Sfioc.Registration',
@@ -23,7 +23,7 @@ function createRegistration(component, options = {}) {
   const componentOpts = component[COMPONENT_OPTIONS];
 
   return {
-    _sfType: SFIOC.REGISTRATION,
+    _sfType: REGISTRATION,
     id: options.id,
     groupId: options.groupId || null,
     target: prepareTarget(),

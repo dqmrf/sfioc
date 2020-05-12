@@ -17,7 +17,7 @@ describe('createContainer', () => {
 });
 
 describe('container', () => {
-  it('lets me register components and resolve them', () => {
+  test.only('lets me register components and resolve them', () => {
     let container = createContainer();
 
     const testValueComponent = componentWrapper(testValue, {
@@ -203,23 +203,6 @@ describe('container', () => {
         component2,
         nestedGroup
       }).singleton().fn();
-
-      container.register({ group });
-      const { registrations } = container;
-
-      Object.values(registrations).forEach(registration => {
-        expect(registration.lifetime).toEqual(Lifetime.SINGLETON);
-      });
-    });
-
-    it(`overwrites '${COMPONENT_OPTIONS}' of groups nested components`, () => {
-      const component1 = componentWrapper(stubTarget).transient();
-      const component2 = componentWrapper(stubTarget).transient();
-
-      const group = groupWrapper(
-        { component1, component2 },
-        { lifetime: Lifetime.SINGLETON }
-      );
 
       container.register({ group });
       const { registrations } = container;

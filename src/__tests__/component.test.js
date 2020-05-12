@@ -2,7 +2,11 @@ const { catchError } = require('../utils');
 const { SfiocTypeError } = require('../errors');
 const { componentWrapper } = require('../component');
 const {
-  ComponentTypes, Lifetime, ElementTypes, SFIOC, COMPONENT_OPTIONS
+  ComponentTypes,
+  Lifetime,
+  ElementTypes,
+  ELEMENT,
+  COMPONENT_OPTIONS
 } = require('../constants');
 
 const stubTarget = jest.fn();
@@ -17,7 +21,7 @@ describe('componentWrapper', () => {
     const component = componentWrapper(stubTarget, options);
 
     expect(typeof component).toBe('object');
-    expect(component._sfType).toEqual(SFIOC.ELEMENT);
+    expect(component._sfType).toEqual(ELEMENT);
     expect(component._sfElementType).toEqual(ElementTypes.COMPONENT);
     expect(component[COMPONENT_OPTIONS]).toStrictEqual(options)
   });

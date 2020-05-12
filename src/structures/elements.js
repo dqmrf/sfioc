@@ -1,7 +1,7 @@
 const R = require('ramda');
 const t = require('../infra/tcomb');
 const { LifetimeEnums, ComponentTypesEnums } = require('./enums');
-const { ElementTypes, SFIOC, COMPONENT_OPTIONS } = require('../constants');
+const { ElementTypes, ELEMENT, COMPONENT_OPTIONS } = require('../constants');
 
 const Element = t.declare('Component | Group');
 const Elements = t.declare('Elements');
@@ -9,7 +9,7 @@ const Component = t.declare('Component');
 const ComponentOptions = t.declare('ComponentOptions');
 const Group = t.declare('Group');
 
-const ElementIdentifier = t.refinement(t.String, x => x === SFIOC.ELEMENT);
+const ElementIdentifier = t.refinement(t.String, x => x === ELEMENT);
 const ComponentIdentifier = t.refinement(t.String, x => x === ElementTypes.COMPONENT);
 const GroupIdentifier = t.refinement(t.String, x => x === ElementTypes.GROUP);
 

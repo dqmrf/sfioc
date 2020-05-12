@@ -1,11 +1,11 @@
-const { ElementTypes, SFIOC } = require('../constants');
+const { ElementTypes, ELEMENT } = require('../constants');
 
 function getElementType(element) {
   return isElement(element) ? element._sfElementType : undefined;
 }
 
 function isElement(element) {
-  return element && element._sfType === SFIOC.ELEMENT;
+  return element && element._sfType === ELEMENT;
 }
 
 function isComponent(element) {

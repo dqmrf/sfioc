@@ -1,8 +1,7 @@
 const U = require('./utils');
 const t = require('./infra/tcomb');
-const { createBuildOptions } = require('./buildOptions');
-const { updateComponentOptions } = require('./component');
-const { ElementTypes, SFIOC, COMPONENT_OPTIONS } = require('./constants');
+const { ElementTypes, ELEMENT, COMPONENT_OPTIONS } = require('./constants');
+const { updateComponentOptions, createComponentBuildOptions } = require('./component');
 
 const handler = t.createHandler({
   description: 'Sfioc.Group'
@@ -28,7 +27,7 @@ function groupWrapper(elements, options = {}) {
 
   Object.defineProperties(group, {
     '_sfType': {
-      value: SFIOC.ELEMENT,
+      value: ELEMENT,
       enumerable: true,
       configurable: false,
       writable: false
@@ -42,7 +41,7 @@ function groupWrapper(elements, options = {}) {
   });
 
   updateComponentOptions(group, options);
-  return createBuildOptions(group, updateComponentOptions);
+  return createComponentBuildOptions(group);
 }
 
 module.exports = {

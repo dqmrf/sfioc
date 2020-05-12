@@ -2,7 +2,7 @@ const { catchError } = require('../utils');
 const { SfiocTypeError } = require('../errors');
 const { createRegistration } = require('../registration');
 const { componentWrapper } = require('../component');
-const { ComponentTypes, Lifetime, SFIOC } = require('../constants');
+const { ComponentTypes, Lifetime, REGISTRATION } = require('../constants');
 
 const stubTarget = jest.fn();
 
@@ -17,7 +17,7 @@ describe('createRegistration', () => {
     const registration = createRegistration(component);
 
     expect(typeof registration).toBe('object');
-    expect(registration._sfType).toEqual(SFIOC.REGISTRATION);
+    expect(registration._sfType).toEqual(REGISTRATION);
     expect(registration.lifetime).toEqual(options.lifetime);
     expect(registration.dependencies).toEqual(options.dependsOn);
   });

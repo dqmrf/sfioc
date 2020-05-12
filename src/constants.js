@@ -1,7 +1,5 @@
-const SFIOC = {
-  ELEMENT: 'ELEMENT',
-  REGISTRATION: 'REGISTRATION'
-}
+const ELEMENT = 'ELEMENT';
+const REGISTRATION = 'REGISTRATION';
 
 const ElementTypes = {
   COMPONENT: 'COMPONENT',
@@ -22,7 +20,8 @@ const Lifetime = {
 const COMPONENT_OPTIONS = 'componentOptions';
 
 module.exports = {
-  SFIOC,
+  ELEMENT,
+  REGISTRATION,
   ElementTypes,
   ComponentTypes,
   Lifetime,
