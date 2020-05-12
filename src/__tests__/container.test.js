@@ -211,6 +211,50 @@ describe('container', () => {
         expect(registration.lifetime).toEqual(Lifetime.SINGLETON);
       });
     });
+
+    it(`overwrites '${COMPONENT_OPTIONS}' of groups nested components`, () => {
+      const component1 = componentWrapper(stubTarget).transient();
+      const component2 = componentWrapper(stubTarget).transient();
+
+      const group = groupWrapper(
+        { component1, component2 },
+        { lifetime: Lifetime.SINGLETON }
+      );
+
+      container.register({ group });
+      const { registrations } = container;
+
+      Object.values(registrations).forEach(registration => {
+        expect(registration.lifetime).toEqual(Lifetime.SINGLETON);
+      });
+    });
+
+    it(`lets global '${COMPONENT_OPTIONS}' overwrite '${COMPONENT_OPTIONS}' of all of it's children`, () => {
+      container = createContainer({ lifetime: Lifetime.SINGLETON });
+
+      const nestedComponent1 = componentWrapper(stubTarget).transient();
+      const nestedComponent2 = componentWrapper(stubTarget).class();
+      const component1 = componentWrapper(stubTarget).value().singleton();
+      const component2 = componentWrapper(stubTarget).class().transient();
+
+      const nestedGroup = groupWrapper({
+        nestedComponent1,
+        nestedComponent2
+      });
+
+      const group = groupWrapper({
+        component1,
+        component2,
+        nestedGroup
+      }).transient().fn();
+
+      container.register({ group });
+      const { registrations } = container;
+
+      Object.values(registrations).forEach(registration => {
+        expect(registration.lifetime).toEqual(Lifetime.SINGLETON);
+      });
+    });
   });
 
   describe('resolve', () => {

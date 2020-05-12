@@ -49,7 +49,13 @@ function componentWrapper(target, options = {}) {
   return createBuildOptions(component, updateComponentOptions);
 }
 
-function updateComponentOptions(source, newOptions) {
+function updateComponentOptions(source, inputOptions, ...args) {
+  const newOptions = args.reduce((acc, options) => {
+    return Object.assign({}, acc, options || {});
+  }, inputOptions || {});
+
+  if (R.isEmpty(newOptions)) return source[COMPONENT_OPTIONS];
+
   t.handle(newOptions, {
     validator: ComponentOptions,
     paramName: COMPONENT_OPTIONS
@@ -72,5 +78,6 @@ function filterComponentOptions(options) {
 
 module.exports = {
   componentWrapper,
-  updateComponentOptions
+  updateComponentOptions,
+  filterComponentOptions
 };

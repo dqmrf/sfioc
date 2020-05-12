@@ -2,10 +2,11 @@ const R = require('ramda');
 const async = require('async');
 const U = require('./utils');
 const t = require('./infra/tcomb');
-const { Lifetime, ElementTypes, COMPONENT_OPTIONS } = require('./constants');
 const { SfiocResolutionError } = require('./errors');
-const { Elements, ComponentDependencies } = require('./structures');
 const { createRegistration } = require('./registration');
+const { Elements, ComponentDependencies } = require('./structures');
+const { Lifetime, ElementTypes, COMPONENT_OPTIONS } = require('./constants');
+const { updateComponentOptions, filterComponentOptions } = require('./component');
 
 const { COMPONENT, GROUP } = ElementTypes;
 
@@ -15,7 +16,7 @@ const { COMPONENT, GROUP } = ElementTypes;
  * @return {object}
  * The container.
  */
-function createContainer() {
+function createContainer(containerOptions = {}) {
   // Storage for all registered registrations.
   const registrations = {};
 
@@ -27,6 +28,9 @@ function createContainer() {
 
   // Registration that is currently resolving.
   let registration = null;
+
+  // Global options for all components.
+  const componentOptions = filterComponentOptions(containerOptions);
 
   // Container itself.
   const container = {
@@ -72,17 +76,20 @@ function createContainer() {
    * @return {object}
    * The container.
    */
-  function _register(elements, options = { parentGroup: {} }) {
+  function _register(elements, params = {}) {
+    params = R.mergeRight({ parentGroup: {} }, params);
+
     const elementNames = Object.keys(elements);
-    const { parentGroup } = options;
+    const { parentGroup } = params;
 
     for (const elementName of elementNames) {
       const element = elements[elementName];
       const elementId = U.joinRight([parentGroup.id, elementName], '.');
 
-      Object.assign(
-        element[COMPONENT_OPTIONS],
-        options.parentGroup[COMPONENT_OPTIONS]
+      updateComponentOptions(
+        element,
+        parentGroup[COMPONENT_OPTIONS],
+        componentOptions
       );
 
       switch(U.getElementType(element)) {
