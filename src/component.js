@@ -9,7 +9,7 @@ const {
   COMPONENT_OPTIONS
 } = require('./constants');
 
-const componentOptionsDefaults = {
+const defaultOptions = {
   type: ComponentTypes.FUNCTION,
   lifetime: Lifetime.TRANSIENT,
   dependsOn: null
@@ -30,7 +30,7 @@ const componentOptionsDefaults = {
 function componentWrapper(target, options = {}) {
   const component = {
     target,
-    [COMPONENT_OPTIONS]: R.clone(componentOptionsDefaults)
+    [COMPONENT_OPTIONS]: R.clone(defaultOptions)
   };
 
   Object.defineProperties(component, {
@@ -100,7 +100,7 @@ function updateComponentOptions(source, inputOptions, ...args) {
 function filterComponentOptions(options) {
   const result = {};
   for (let optionName in options) {
-    if (!componentOptionsDefaults.hasOwnProperty(optionName)) continue;
+    if (!defaultOptions.hasOwnProperty(optionName)) continue;
     result[optionName] = options[optionName];
   }
   return result;

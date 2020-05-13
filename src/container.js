@@ -4,11 +4,15 @@ const U = require('./utils');
 const t = require('./infra/tcomb');
 const { SfiocResolutionError } = require('./errors');
 const { createRegistration } = require('./registration');
-const { Elements, ComponentDependencies } = require('./structures');
-const { Lifetime, ElementTypes, COMPONENT_OPTIONS } = require('./constants');
+const { Elements, ComponentDependencies, ContainerOptions } = require('./structures');
+const { InjectionMode, Lifetime, ElementTypes, COMPONENT_OPTIONS } = require('./constants');
 const { updateComponentOptions, filterComponentOptions } = require('./component');
 
 const { COMPONENT, GROUP } = ElementTypes;
+
+const defaultOptions = {
+  injectionMode: InjectionMode.CLASSIC
+}
 
 /**
  * Creates an Sfioc container instance.
@@ -17,6 +21,17 @@ const { COMPONENT, GROUP } = ElementTypes;
  * The container.
  */
 function createContainer(containerOptions = {}) {
+  // Global options for the container.
+  containerOptions = t.handle(containerOptions, {
+    description: 'Sfioc.createContainer',
+    paramName: 'containerOptions',
+    validator: ContainerOptions,
+    defaults: R.clone(defaultOptions)
+  }).value
+
+  // Global options for all components.
+  const componentOptions = filterComponentOptions(containerOptions);
+
   // Storage for all registered registrations.
   const registrations = {};
 
@@ -26,11 +41,12 @@ function createContainer(containerOptions = {}) {
   // Storage for resolved dependencies with 'SINGLETON' lifetime.
   const cache = new Map();
 
+  // Proxified registrations which can resolve themselves.
+  // Used when PROXY injection mode selected.
+  const resolvers = proxify(registrations);
+
   // Registration that is currently resolving.
   let registration = null;
-
-  // Global options for all components.
-  const componentOptions = filterComponentOptions(containerOptions);
 
   // Container itself.
   const container = {
@@ -79,12 +95,12 @@ function createContainer(containerOptions = {}) {
   function _register(elements, params = {}) {
     params = R.mergeRight({ parentGroup: {} }, params);
 
-    const elementNames = Object.keys(elements);
+    const elementIds = Object.keys(elements);
     const { parentGroup } = params;
 
-    for (const elementName of elementNames) {
-      const element = elements[elementName];
-      const elementId = U.joinRight([parentGroup.id, elementName], '.');
+    for (const elementId of elementIds) {
+      const element = elements[elementId];
+      const elementPath = U.joinRight([parentGroup.id, elementId], '.');
 
       updateComponentOptions(
         element,
@@ -94,7 +110,7 @@ function createContainer(containerOptions = {}) {
 
       switch(U.getElementType(element)) {
         case COMPONENT: {
-          registrations[elementId] = createRegistration(
+          registrations[elementPath] = createRegistration(
             element, {
             id: elementId,
             groupId: parentGroup.id
@@ -106,7 +122,7 @@ function createContainer(containerOptions = {}) {
             element.elements, {
             parentGroup: {
               ...element,
-              id: elementId
+              id: elementPath
             }
           });
           break;
@@ -120,22 +136,30 @@ function createContainer(containerOptions = {}) {
   /**
    * Resolves the registration with the given name.
    *
-   * @param {string} name
-   * The name of the registration to resolve.
+   * @param {string | object} arg
+   * The id of the registration or registration.
    *
    * @return {any}
    * Whatever was resolved.
    */
-  function resolve(name) {
-    registration = registrations[name];
-
-    if (!registration) {
-      throw new SfiocResolutionError(name, resolutionStack);
+  function resolve(arg) {
+    if (R.type(arg) === 'String') {
+      registration = registrations[arg];
     }
 
-    if (R.find(R.propEq('id', name), resolutionStack)) {
+    if (U.isRegistration(arg)) {
+      registration = arg;
+    }
+
+    if (!registration) {
+      throw new SfiocResolutionError(arg, resolutionStack);
+    }
+
+    const { id } = registration;
+
+    if (R.find(R.propEq('id', id), resolutionStack)) {
       throw new SfiocResolutionError(
-        name,
+        id,
         resolutionStack,
         `'Cyclic dependencies detected.'`
       );
@@ -150,10 +174,10 @@ function createContainer(containerOptions = {}) {
         break;
       }
       case Lifetime.SINGLETON: {
-        cached = cache.get(name);
+        cached = cache.get(id);
         if (!cached) {
           resolved = resolveRegistration();
-          cache.set(name, resolved);
+          cache.set(id, resolved);
         } else {
           resolved = cached;
         }
@@ -161,7 +185,7 @@ function createContainer(containerOptions = {}) {
       }
       default: {
         throw new SfiocResolutionError(
-          name,
+          id,
           resolutionStack,
           `Unknown lifetime "${registration.lifetime}"`
         );
@@ -184,6 +208,24 @@ function createContainer(containerOptions = {}) {
    * Whatever was resolved.
    */
   function resolveRegistration() {
+    const { injectionMode } = containerOptions;
+
+    switch (injectionMode) {
+      case InjectionMode.CLASSIC:
+        return resolveRegistrationClassic();
+      case InjectionMode.PROXY:
+        return resolveRegistrationProxy();
+      default: {
+        throw new SfiocResolutionError(
+          registration.id,
+          resolutionStack,
+          `Unknown injection mode "${injectionMode}"`
+        );
+      }
+    }
+  }
+
+  function resolveRegistrationClassic() {
     let resolvedTarget;
 
     async.seq(
@@ -200,6 +242,10 @@ function createContainer(containerOptions = {}) {
     });
 
     return resolvedTarget;
+  }
+
+  function resolveRegistrationProxy() {
+    return registration.target(resolvers);
   }
 
   /**
@@ -291,6 +337,40 @@ function createContainer(containerOptions = {}) {
     });
 
     return selectors;
+  }
+
+  /**
+   * Generate a proxy object with resolvers that will be injected in
+   * the dependencies. Used when the 'PROXY' injection mode is specified.
+   *
+   * @param {object} registrations
+   * Container registrations.
+   *
+   * @return {object}
+   * Proxy with registration resolvers.
+   */
+  function proxify(registrations) {
+    return new Proxy(registrations, {
+      get(target, inputId) {
+        const groupRegistrations = {};
+
+        for (registration of Object.values(target)) {
+          if (inputId == registration.id) {
+            return resolve(registration);
+          }
+
+          if (inputId == registration.groupId) {
+            groupRegistrations[registration.id] = registration;
+          }
+        }
+
+        if (!R.isEmpty(groupRegistrations)) {
+          return proxify(groupRegistrations);
+        }
+
+        throw new SfiocResolutionError(inputId, resolutionStack);
+      }
+    });
   }
 }
 

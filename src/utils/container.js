@@ -1,4 +1,4 @@
-const { ElementTypes, ELEMENT } = require('../constants');
+const { ElementTypes, ELEMENT, REGISTRATION } = require('../constants');
 
 function getElementType(element) {
   return isElement(element) ? element._sfElementType : undefined;
@@ -14,6 +14,10 @@ function isComponent(element) {
 
 function isGroup(element) {
   return element && element._sfElementType === ElementTypes.GROUP;
+}
+
+function isRegistration(element) {
+  return element && element._sfType === REGISTRATION;
 }
 
 function generateMapFromPath(name, dependency, options = {}) {
@@ -35,5 +39,6 @@ module.exports = {
   isElement,
   isComponent,
   isGroup,
+  isRegistration,
   generateMapFromPath
 }
