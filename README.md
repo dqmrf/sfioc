@@ -140,6 +140,17 @@ app.start(userId);
 const wrongUserId = 42;
 app.start(wrongUserId);
 ```
+
 ## TODO:
-- Validator: expand 'struct' structure when t.handler throws an error
-- group resolving implementation
+### Necessary
+- Create 'dependsOn' build option.
+- Update component and group exports (and generally wherever possible)
+
+### Secondary
+- Group resolving implementation.
+- Proxy with dependencies. Nested proxies?
+- Angular-like dependencies.
+- Probably it's not needed to mutate container element inside 'updateComponentOptions' method.
+- Validator: expand 'struct' structure when t.handler throws an error.
+- Webpack + babel?
+- Clean up* in tests.
