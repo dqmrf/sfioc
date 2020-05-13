@@ -3,7 +3,12 @@ const { createContainer } = require('../container');
 const { groupWrapper } = require('../group');
 const { componentWrapper } = require('../component');
 const { SfiocResolutionError, SfiocTypeError } = require('../errors');
-const { ComponentTypes, Lifetime, COMPONENT_OPTIONS } = require('../constants');
+const {
+  InjectionMode,
+  ComponentTypes,
+  Lifetime,
+  COMPONENT_OPTIONS
+} = require('../constants');
 
 const testValue = 228;
 const testValueGetterProvider = ({ testValue }) => () => testValue;
@@ -17,7 +22,7 @@ describe('createContainer', () => {
 });
 
 describe('container', () => {
-  test.only('lets me register components and resolve them', () => {
+  it('lets me register components and resolve them', () => {
     let container = createContainer();
 
     const testValueComponent = componentWrapper(testValue, {
@@ -36,6 +41,7 @@ describe('container', () => {
     });
 
     const getTestValue = container.resolve('getTestValue');
+
     expect(getTestValue).toBeTruthy();
     expect(getTestValue()).toBe(testValue);
   });
@@ -397,6 +403,25 @@ describe('container', () => {
       expect(error.message).toContain('first -> second -> third');
     });
 
+    it('throws an SfiocResolutionError when there are cyclic dependencies', () => {
+      const first = ({ second }) => second;
+      const second = ({ third }) => third;
+      const third = ({ second }) => second;
+
+      container.register({
+        first: componentWrapper(first, { dependsOn: 'second' }),
+        second: componentWrapper(second, { dependsOn: 'third' }),
+        third: componentWrapper(third, { dependsOn: 'second' }),
+      });
+
+      const error = catchError(() => {
+        container.resolve('first');
+      });
+
+      expect(error).toBeInstanceOf(SfiocResolutionError);
+      expect(error.message).toContain('first -> second -> third -> second');
+    });
+
     describe('lifetime', () => {
       let root, store, acc;
       beforeEach(() => {
@@ -453,23 +478,76 @@ describe('container', () => {
       });
     });
 
-    it('throws an SfiocResolutionError when there are cyclic dependencies', () => {
-      const first = ({ second }) => second;
-      const second = ({ third }) => third;
-      const third = ({ second }) => second;
-
-      container.register({
-        first: componentWrapper(first, { dependsOn: 'second' }),
-        second: componentWrapper(second, { dependsOn: 'third' }),
-        third: componentWrapper(third, { dependsOn: 'second' }),
+    describe(`'PROXY' injection mode`, () => {
+      beforeEach(() => {
+        container = createContainer({
+          injectionMode: InjectionMode.PROXY
+        });
       });
 
-      const error = catchError(() => {
-        container.resolve('first');
+      it('lets me resolve dependencies via proxy', () => {
+        const testValueComponent = componentWrapper(testValue).value();
+        const getTestValueComponent = componentWrapper(testValueGetterProvider);
+
+        container.register({
+          testValue: testValueComponent,
+          getTestValue: getTestValueComponent
+        });
+
+        const getTestValue = container.resolve('getTestValue');
+
+        expect(getTestValue).toBeTruthy();
+        expect(getTestValue()).toBe(testValue);
       });
 
-      expect(error).toBeInstanceOf(SfiocResolutionError);
-      expect(error.message).toContain('first -> second -> third -> second');
+      it('lets me register components with groups and resolve them', () => {
+        let store = {
+          loggedIn: false,
+          anotherValue: false
+        }
+
+        const loginOperation = () => {
+          return () => {
+            store.loggedIn = true;
+          }
+        }
+
+        const anotherOperation = () => {
+          return () => {
+            store.anotherValue = true;
+          }
+        }
+
+        const app = ({ operations }) => ({
+          run() {
+            operations.login();
+            if (store.loggedIn) {
+              operations.another();
+            }
+          }
+        });
+
+        container.register({
+          app: componentWrapper(app, {
+            dependsOn: ['operations.login', 'operations.another']
+          }),
+          operations: groupWrapper({
+            login: componentWrapper(loginOperation),
+            another: componentWrapper(anotherOperation)
+          })
+        });
+
+        const resolvedApp = container.resolve('app');
+        expect(resolvedApp).toBeTruthy();
+        expect(typeof resolvedApp).toBe('object');
+        expect(resolvedApp).toHaveProperty('run');
+
+        resolvedApp.run();
+        expect(store).toStrictEqual({
+          loggedIn: true,
+          anotherValue: true
+        });
+      });
     });
   });
 });
