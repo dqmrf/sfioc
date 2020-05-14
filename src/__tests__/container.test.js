@@ -1,7 +1,7 @@
 const { catchError } = require('../utils');
 const { createContainer } = require('../container');
-const { groupWrapper } = require('../group');
-const { componentWrapper } = require('../component');
+const { createGroup } = require('../group');
+const { createComponent } = require('../component');
 const { SfiocResolutionError, SfiocTypeError } = require('../errors');
 const {
   InjectionMode,
@@ -25,11 +25,11 @@ describe('container', () => {
   it('lets me register components and resolve them', () => {
     let container = createContainer();
 
-    const testValueComponent = componentWrapper(testValue, {
+    const testValueComponent = createComponent(testValue, {
       type: ComponentTypes.VALUE
     });
 
-    const getTestValueComponent = componentWrapper(
+    const getTestValueComponent = createComponent(
       testValueGetterProvider, {
       type: ComponentTypes.FUNCTION,
       dependsOn: ['testValue']
@@ -77,12 +77,12 @@ describe('container', () => {
     });
 
     container.register({
-      app: componentWrapper(app, {
+      app: createComponent(app, {
         dependsOn: ['operations.login', 'operations.another']
       }),
-      operations: groupWrapper({
-        login: componentWrapper(loginOperation),
-        another: componentWrapper(anotherOperation)
+      operations: createGroup({
+        login: createComponent(loginOperation),
+        another: createComponent(anotherOperation)
       })
     });
 
@@ -106,13 +106,13 @@ describe('container', () => {
 
     it('lets me register registrations in multiple calls', () => {
       container.register({
-        testValue: componentWrapper(testValue, {
+        testValue: createComponent(testValue, {
           type: ComponentTypes.VALUE
         })
       });
 
       container.register({
-        getTestValue: componentWrapper(
+        getTestValue: createComponent(
           testValueGetterProvider, {
           type: ComponentTypes.FUNCTION,
           dependsOn: ['testValue']
@@ -128,10 +128,10 @@ describe('container', () => {
 
     it('accepts a single dependency as a string', () => {
       container.register({
-        testValue: componentWrapper(testValue, {
+        testValue: createComponent(testValue, {
           type: ComponentTypes.VALUE
         }),
-        getTestValue: componentWrapper(
+        getTestValue: createComponent(
           testValueGetterProvider, {
           type: ComponentTypes.FUNCTION,
           dependsOn: 'testValue'
@@ -163,11 +163,11 @@ describe('container', () => {
       }
 
       container.register({
-        app: componentWrapper(TestApp, {
+        app: createComponent(TestApp, {
           type: ComponentTypes.CLASS,
           dependsOn: ['repo']
         }),
-        repo: componentWrapper(TestRepo, {
+        repo: createComponent(TestRepo, {
           type: ComponentTypes.CLASS
         })
       })
@@ -177,10 +177,10 @@ describe('container', () => {
     });
 
     it(`overwrites '${COMPONENT_OPTIONS}' of groups nested components`, () => {
-      const component1 = componentWrapper(stubTarget).transient();
-      const component2 = componentWrapper(stubTarget).transient();
+      const component1 = createComponent(stubTarget).transient();
+      const component2 = createComponent(stubTarget).transient();
 
-      const group = groupWrapper(
+      const group = createGroup(
         { component1, component2 },
         { lifetime: Lifetime.SINGLETON }
       );
@@ -194,17 +194,17 @@ describe('container', () => {
     });
 
     it(`overwrites '${COMPONENT_OPTIONS}' of groups nested groups with its components`, () => {
-      const nestedComponent1 = componentWrapper(stubTarget).transient();
-      const nestedComponent2 = componentWrapper(stubTarget).class();
-      const component1 = componentWrapper(stubTarget).value().singleton();
-      const component2 = componentWrapper(stubTarget).class().singleton();
+      const nestedComponent1 = createComponent(stubTarget).transient();
+      const nestedComponent2 = createComponent(stubTarget).class();
+      const component1 = createComponent(stubTarget).value().singleton();
+      const component2 = createComponent(stubTarget).class().singleton();
 
-      const nestedGroup = groupWrapper({
+      const nestedGroup = createGroup({
         nestedComponent1,
         nestedComponent2
       }).transient();
 
-      const group = groupWrapper({
+      const group = createGroup({
         component1,
         component2,
         nestedGroup
@@ -221,17 +221,17 @@ describe('container', () => {
     it(`lets global '${COMPONENT_OPTIONS}' overwrite '${COMPONENT_OPTIONS}' of all of it's children`, () => {
       container = createContainer({ lifetime: Lifetime.SINGLETON });
 
-      const nestedComponent1 = componentWrapper(stubTarget).transient();
-      const nestedComponent2 = componentWrapper(stubTarget).class();
-      const component1 = componentWrapper(stubTarget).value().singleton();
-      const component2 = componentWrapper(stubTarget).class().transient();
+      const nestedComponent1 = createComponent(stubTarget).transient();
+      const nestedComponent2 = createComponent(stubTarget).class();
+      const component1 = createComponent(stubTarget).value().singleton();
+      const component2 = createComponent(stubTarget).class().transient();
 
-      const nestedGroup = groupWrapper({
+      const nestedGroup = createGroup({
         nestedComponent1,
         nestedComponent2
       });
 
-      const group = groupWrapper({
+      const group = createGroup({
         component1,
         component2,
         nestedGroup
@@ -257,10 +257,10 @@ describe('container', () => {
         let callback = jest.fn((DP) => (DP.testValue));
 
         container.register({
-          testValue: componentWrapper(testValue, {
+          testValue: createComponent(testValue, {
             type: ComponentTypes.VALUE
           }),
-          getTestValue: componentWrapper(
+          getTestValue: createComponent(
             testValueGetterProvider, {
             type: ComponentTypes.FUNCTION,
             dependsOn: callback
@@ -277,10 +277,10 @@ describe('container', () => {
         let callback = jest.fn((DP) => (DP.testValue));
 
         container.register({
-          testValue: componentWrapper(testValue, {
+          testValue: createComponent(testValue, {
             type: ComponentTypes.VALUE
           }),
-          getTestValue: componentWrapper(
+          getTestValue: createComponent(
             testValueGetterProvider, {
             type: ComponentTypes.FUNCTION,
             dependsOn: callback
@@ -295,10 +295,10 @@ describe('container', () => {
 
       it('resolve dependencies if callback returns a String with a single existing dependency', () => {
         container.register({
-          testValue: componentWrapper(testValue, {
+          testValue: createComponent(testValue, {
             type: ComponentTypes.VALUE
           }),
-          getTestValue: componentWrapper(
+          getTestValue: createComponent(
             testValueGetterProvider, {
             type: ComponentTypes.FUNCTION,
             dependsOn: (DP) => (DP.testValue)
@@ -312,10 +312,10 @@ describe('container', () => {
 
       it('resolve dependencies if callback returns an Array with a single existing dependency', () => {
         container.register({
-          testValue: componentWrapper(testValue, {
+          testValue: createComponent(testValue, {
             type: ComponentTypes.VALUE
           }),
-          getTestValue: componentWrapper(
+          getTestValue: createComponent(
             testValueGetterProvider, {
             type: ComponentTypes.FUNCTION,
             dependsOn: (DP) => ([DP.testValue])
@@ -329,7 +329,7 @@ describe('container', () => {
 
       it('throws an SfiocTypeError if callback returns an Function', () => {
         container.register({
-          getTestValue: componentWrapper(
+          getTestValue: createComponent(
             testValueGetterProvider, {
             dependsOn: () => (() => {})
           })
@@ -347,7 +347,7 @@ describe('container', () => {
         let callback = jest.fn();
 
         container.register({
-          getTestValue: componentWrapper(callback, {
+          getTestValue: createComponent(callback, {
             dependsOn: () => ([])
           })
         });
@@ -360,7 +360,7 @@ describe('container', () => {
 
       it('throws an SfiocTypeError if callback returns an Array with empty values', () => {
         container.register({
-          getTestValue: componentWrapper(
+          getTestValue: createComponent(
             testValueGetterProvider, {
             dependsOn: () => (['', ''])
           })
@@ -390,9 +390,9 @@ describe('container', () => {
       const third = ({ unregistered }) => unregistered;
 
       container.register({
-        first: componentWrapper(first, { dependsOn: 'second' }),
-        second: componentWrapper(second, { dependsOn: 'third' }),
-        third: componentWrapper(third, { dependsOn: 'unregistered' }),
+        first: createComponent(first, { dependsOn: 'second' }),
+        second: createComponent(second, { dependsOn: 'third' }),
+        third: createComponent(third, { dependsOn: 'unregistered' }),
       });
 
       const error = catchError(() => {
@@ -409,9 +409,9 @@ describe('container', () => {
       const third = ({ second }) => second;
 
       container.register({
-        first: componentWrapper(first, { dependsOn: 'second' }),
-        second: componentWrapper(second, { dependsOn: 'third' }),
-        third: componentWrapper(third, { dependsOn: 'second' }),
+        first: createComponent(first, { dependsOn: 'second' }),
+        second: createComponent(second, { dependsOn: 'third' }),
+        third: createComponent(third, { dependsOn: 'second' }),
       });
 
       const error = catchError(() => {
@@ -445,13 +445,13 @@ describe('container', () => {
 
       it('supports singleton lifetime', () => {
         container.register({
-          root: componentWrapper(root, {
+          root: createComponent(root, {
             dependsOn: ['accumulator', 'store']
           }),
-          store: componentWrapper(store, {
+          store: createComponent(store, {
             dependsOn: 'accumulator'
           }),
-          accumulator: componentWrapper(acc, {
+          accumulator: createComponent(acc, {
             lifetime: Lifetime.SINGLETON
           })
         });
@@ -462,13 +462,13 @@ describe('container', () => {
 
       it('supports transient lifetime', () => {
         container.register({
-          root: componentWrapper(root, {
+          root: createComponent(root, {
             dependsOn: ['accumulator', 'store']
           }),
-          store: componentWrapper(store, {
+          store: createComponent(store, {
             dependsOn: 'accumulator'
           }),
-          accumulator: componentWrapper(acc, {
+          accumulator: createComponent(acc, {
             lifetime: Lifetime.TRANSIENT
           })
         });
@@ -476,6 +476,23 @@ describe('container', () => {
         const counter = container.resolve('root');
         expect(counter).toBe(0);
       });
+    });
+
+    it(`lets me resolve dependencies via 'get' proxy`, () => {
+      const testValueComponent = createComponent(testValue).value();
+      const getTestValueComponent = createComponent(testValueGetterProvider, {
+        dependsOn: 'testValue'
+      });
+
+      container.register({
+        testValue: testValueComponent,
+        getTestValue: getTestValueComponent
+      });
+
+      const getTestValue = container.get.getTestValue;
+
+      expect(getTestValue).toBeTruthy();
+      expect(getTestValue()).toBe(testValue);
     });
 
     describe(`'PROXY' injection mode`, () => {
@@ -486,8 +503,8 @@ describe('container', () => {
       });
 
       it('lets me resolve dependencies via proxy', () => {
-        const testValueComponent = componentWrapper(testValue).value();
-        const getTestValueComponent = componentWrapper(testValueGetterProvider);
+        const testValueComponent = createComponent(testValue).value();
+        const getTestValueComponent = createComponent(testValueGetterProvider);
 
         container.register({
           testValue: testValueComponent,
@@ -528,12 +545,12 @@ describe('container', () => {
         });
 
         container.register({
-          app: componentWrapper(app, {
+          app: createComponent(app, {
             dependsOn: ['operations.login', 'operations.another']
           }),
-          operations: groupWrapper({
-            login: componentWrapper(loginOperation),
-            another: componentWrapper(anotherOperation)
+          operations: createGroup({
+            login: createComponent(loginOperation),
+            another: createComponent(anotherOperation)
           })
         });
 

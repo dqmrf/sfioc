@@ -1,7 +1,7 @@
 const sfioc = require('../sfioc');
 const { createContainer } = require('../container');
-const { componentWrapper } = require('../component');
-const { groupWrapper } = require('../group');
+const { createGroup } = require('../group');
+const { createComponent } = require('../component');
 
 describe('sfioc', () => {
   it('exists', () => {
@@ -15,11 +15,11 @@ describe('sfioc', () => {
 
   it(`has a 'component' function`, () => {
     expect(sfioc).toHaveProperty('component');
-    expect(sfioc.component).toBe(componentWrapper);
+    expect(sfioc.component).toBe(createComponent);
   });
 
   it(`has a 'group' function`, () => {
     expect(sfioc).toHaveProperty('group');
-    expect(sfioc.group).toBe(groupWrapper);
+    expect(sfioc.group).toBe(createGroup);
   });
 });

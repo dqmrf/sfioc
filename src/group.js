@@ -1,10 +1,9 @@
-const U = require('./utils');
 const t = require('./infra/tcomb');
+const component = require('./component');
 const { ElementTypes, ELEMENT, COMPONENT_OPTIONS } = require('./constants');
-const { updateComponentOptions, createComponentBuildOptions } = require('./component');
 
 const handler = t.createHandler({
-  description: 'Sfioc.Group'
+  description: 'Sfioc.createGroup'
 });
 
 /**
@@ -13,10 +12,13 @@ const handler = t.createHandler({
  * @param {object} elements
  * Dependencies wrapped with 'sfioc.component' or 'sfioc.group' wrappers.
  *
+ * @param {object} options
+ * Options for nested components.
+ *
  * @return {object}
  * Container 'GROUP' element that can be registered.
  */
-function groupWrapper(elements, options = {}) {
+function createGroup(elements, options = {}) {
   const group = {
     elements: handler.handle(elements, {
       validator: t.Object,
@@ -40,10 +42,10 @@ function groupWrapper(elements, options = {}) {
     }
   });
 
-  updateComponentOptions(group, options);
-  return createComponentBuildOptions(group);
+  component.updateOptions(group, options);
+  return component.createBuildOptions(group);
 }
 
 module.exports = {
-  groupWrapper
+  createGroup
 };

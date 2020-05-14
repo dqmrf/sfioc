@@ -62,16 +62,15 @@ class SfiocTypeError extends SfiocError {
 
 class SfiocResolutionError extends SfiocError {
   constructor(
-    name,
+    path,
     resolutionStack,
     inputMessage,
   ) {
     resolutionStack = resolutionStack.slice();
-    const resolutionStackIds = resolutionStack.map(s => s.id);
-    resolutionStackIds.push(name);
-    const resolutionPathString = resolutionStackIds.join(' -> ');
+    resolutionStack.push(path);
+    const resolutionPathString = resolutionStack.join(' -> ');
 
-    let message = `Could not resolve '${name}'.`;
+    let message = `Could not resolve '${path}'.`;
     if (inputMessage) message += ` ${inputMessage}`;
     message += EOL + EOL;
     message += `Resolution path: ${resolutionPathString}`;

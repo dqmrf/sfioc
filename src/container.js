@@ -1,12 +1,13 @@
 const R = require('ramda');
 const U = require('./utils');
+const H = require('./helpers');
 const t = require('./infra/tcomb');
+const component = require('./component');
 const { createResolver } = require('./resolver');
 const { SfiocResolutionError } = require('./errors');
 const { createRegistration } = require('./registration');
 const { Elements, ContainerOptions } = require('./structures');
 const { InjectionMode, Lifetime, ElementTypes, COMPONENT_OPTIONS } = require('./constants');
-const { updateComponentOptions, filterComponentOptions } = require('./component');
 
 const { COMPONENT, GROUP } = ElementTypes;
 
@@ -30,7 +31,7 @@ function createContainer(containerOptions = {}) {
   }).value
 
   // Global options for all components.
-  const componentOptions = filterComponentOptions(containerOptions);
+  const componentOptions = component.filterOptions(containerOptions);
 
   // Storage for all registered registrations.
   const registrations = {};
@@ -41,10 +42,6 @@ function createContainer(containerOptions = {}) {
   // Storage for resolved dependencies with 'SINGLETON' lifetime.
   const cache = new Map();
 
-  // Proxified registrations which can resolve themselves.
-  // Used when PROXY injection mode selected.
-  const resolvers = proxify(registrations);
-
   // Container itself.
   const container = {
     options: containerOptions,
@@ -52,7 +49,7 @@ function createContainer(containerOptions = {}) {
     resolve,
     registrations,
     cache,
-    resolvers
+    get: proxify(registrations)
   }
 
   // For resolving the current registration.
@@ -102,15 +99,15 @@ function createContainer(containerOptions = {}) {
 
     for (const elementId of elementIds) {
       const element = elements[elementId];
-      const elementPath = U.joinRight([parentGroup.id, elementId], '.');
+      const elementPath = U.joinRight([parentGroup.id, elementId]);
 
-      updateComponentOptions(
+      component.updateOptions(
         element,
         parentGroup[COMPONENT_OPTIONS],
         componentOptions
       );
 
-      switch(U.getElementType(element)) {
+      switch(H.getElementType(element)) {
         case COMPONENT: {
           registrations[elementPath] = createRegistration(
             element, {
@@ -138,50 +135,46 @@ function createContainer(containerOptions = {}) {
   /**
    * Resolves the registration with the given name.
    *
-   * @param {string | object} arg
+   * @param {string | object} registration
    * The id of the registration or registration.
    *
    * @return {any}
    * Whatever was resolved.
    */
-  function resolve(arg) {
-    let registration;
+  function resolve(registration) {
+    let currentRegistration = registration;
 
-    if (R.type(arg) === 'String') {
-      registration = registrations[arg];
+    if (R.type(registration) === 'String') {
+      currentRegistration = registrations[registration];
     }
 
-    if (U.isRegistration(arg)) {
-      registration = arg;
+    if (!H.isRegistration(currentRegistration)) {
+      throw new SfiocResolutionError(registration, resolutionStack);
     }
 
-    if (!registration) {
-      throw new SfiocResolutionError(arg, resolutionStack);
-    }
+    const { path, lifetime } = currentRegistration;
 
-    const { id } = registration;
-
-    if (R.find(R.propEq('id', id), resolutionStack)) {
+    if (resolutionStack.includes(path)) {
       throw new SfiocResolutionError(
-        id,
+        path,
         resolutionStack,
         `'Cyclic dependencies detected.'`
       );
     }
 
-    resolutionStack.push(registration);
+    resolutionStack.push(path);
 
     let resolved, cached;
-    switch (registration.lifetime) {
+    switch (lifetime) {
       case Lifetime.TRANSIENT: {
-        resolved = resolver.resolve(registration);
+        resolved = resolver.resolve(currentRegistration);
         break;
       }
       case Lifetime.SINGLETON: {
-        cached = cache.get(id);
+        cached = cache.get(path);
         if (!cached) {
-          resolved = resolver.resolve(registration);
-          cache.set(id, resolved);
+          resolved = resolver.resolve(currentRegistration);
+          cache.set(path, resolved);
         } else {
           resolved = cached;
         }
@@ -189,22 +182,20 @@ function createContainer(containerOptions = {}) {
       }
       default: {
         throw new SfiocResolutionError(
-          id,
+          path,
           resolutionStack,
-          `Unknown lifetime "${registration.lifetime}"`
+          `Unknown lifetime "${lifetime}"`
         );
       }
     }
 
     resolutionStack.pop();
-    registration = R.last(resolutionStack);
-
     return resolved;
   }
 
   /**
-   * Generate a proxy object with resolvers that will be injected in
-   * the dependencies. Used when the 'PROXY' injection mode is specified.
+   * Generate a proxy object for registrations that is able
+   * to resolve its dependencies.
    *
    * @param {object} registrations
    * Container registrations.

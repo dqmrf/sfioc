@@ -1,6 +1,6 @@
 const { catchError } = require('../utils');
 const { SfiocTypeError } = require('../errors');
-const { componentWrapper } = require('../component');
+const { createComponent } = require('../component');
 const {
   ComponentTypes,
   Lifetime,
@@ -11,14 +11,14 @@ const {
 
 const stubTarget = jest.fn();
 
-describe('componentWrapper', () => {
+describe('create', () => {
   it('returns a component', () => {
     const options = {
       type: ComponentTypes.FUNCTION,
       lifetime: Lifetime.SINGLETON,
       dependsOn: ['dependency1', 'dependency2']
     }
-    const component = componentWrapper(stubTarget, options);
+    const component = createComponent(stubTarget, options);
 
     expect(typeof component).toBe('object');
     expect(component._sfType).toEqual(ELEMENT);
@@ -27,7 +27,7 @@ describe('componentWrapper', () => {
   });
 
   it('replaces missing options with defaults (without options passed)', () => {
-    const component = componentWrapper(stubTarget);
+    const component = createComponent(stubTarget);
     const componentOpts = component[COMPONENT_OPTIONS];
 
     expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
@@ -35,7 +35,7 @@ describe('componentWrapper', () => {
   });
 
   it('replaces missing options with defaults (with some options passed)', () => {
-    const component = componentWrapper(stubTarget, {
+    const component = createComponent(stubTarget, {
       lifetime: Lifetime.SINGLETON
     });
     const componentOpts = component[COMPONENT_OPTIONS];
@@ -50,7 +50,7 @@ describe('componentWrapper', () => {
       lifetime: Lifetime.SINGLETON,
       someShit: 'javascript'
     }
-    const component = componentWrapper(stubTarget, options);
+    const component = createComponent(stubTarget, options);
     const componentOpts = component[COMPONENT_OPTIONS];
 
     expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
@@ -59,7 +59,7 @@ describe('componentWrapper', () => {
   });
 
   it('does not throw any error when called without params', () => {
-    const component = componentWrapper();
+    const component = createComponent();
 
     expect(component).toBeTruthy();
     expect(component.target).toEqual(undefined);
@@ -67,7 +67,7 @@ describe('componentWrapper', () => {
 
   it('throws an SfiocTypeError when the lifetime is unknown', () => {
     const error = catchError(() => {
-      componentWrapper(stubTarget, { lifetime: '228' });
+      createComponent(stubTarget, { lifetime: '228' });
     });
 
     expect(error).toBeTruthy();
@@ -77,7 +77,7 @@ describe('componentWrapper', () => {
 
   it('throws an SfiocTypeError when the type is unknown', () => {
     const error = catchError(() => {
-      componentWrapper(stubTarget, { type: '228' });
+      createComponent(stubTarget, { type: '228' });
     });
 
     expect(error).toBeTruthy();
@@ -88,7 +88,7 @@ describe('componentWrapper', () => {
 
 describe('builder options', () => {
   it(`lets me call a chain of builders`, () => {
-    const component = componentWrapper(class Lol {}).singleton().class();
+    const component = createComponent(class Lol {}).singleton().class();
     const componentOpts = component[COMPONENT_OPTIONS];
 
     expect(componentOpts.lifetime).toEqual(Lifetime.SINGLETON);
@@ -97,7 +97,7 @@ describe('builder options', () => {
 
   describe('singleton', () => {
     it(`changes component 'lifetime' to 'SINGLETON'`, () => {
-      const component = componentWrapper(stubTarget).singleton();
+      const component = createComponent(stubTarget).singleton();
       const componentOpts = component[COMPONENT_OPTIONS];
       expect(componentOpts.lifetime).toEqual(Lifetime.SINGLETON);
     });
@@ -105,7 +105,7 @@ describe('builder options', () => {
 
   describe('transient', () => {
     it(`changes component 'lifetime' to 'TRANSIENT'`, () => {
-      const component = componentWrapper(stubTarget)
+      const component = createComponent(stubTarget)
                           .singleton()
                           .transient();
       const componentOpts = component[COMPONENT_OPTIONS];
@@ -117,7 +117,7 @@ describe('builder options', () => {
     let valueGetter = () => 228;
 
     it(`changes component 'type' to 'FUNCTION'`, () => {
-      const component = componentWrapper(valueGetter).fn();
+      const component = createComponent(valueGetter).fn();
       const componentOpts = component[COMPONENT_OPTIONS];
       expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
     });
@@ -127,7 +127,7 @@ describe('builder options', () => {
     let value = 228;
 
     it(`changes component 'type' to 'VALUE'`, () => {
-      const component = componentWrapper(value).value();
+      const component = createComponent(value).value();
       const componentOpts = component[COMPONENT_OPTIONS];
       expect(componentOpts.type).toEqual(ComponentTypes.VALUE);
     });
@@ -137,7 +137,7 @@ describe('builder options', () => {
     class TestClass { getValue = () => 228 }
 
     it(`changes component 'type' to 'CLASS'`, () => {
-      const component = componentWrapper(TestClass).class();
+      const component = createComponent(TestClass).class();
       const componentOpts = component[COMPONENT_OPTIONS];
       expect(componentOpts.type).toEqual(ComponentTypes.CLASS);
     });

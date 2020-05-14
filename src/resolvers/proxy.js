@@ -1,5 +1,5 @@
 function proxyResolver(registration, container) {
-  return registration.target(container.resolvers);
+  return registration.target(container.get);
 }
 
 module.exports = {

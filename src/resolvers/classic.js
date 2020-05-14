@@ -1,6 +1,6 @@
 const R = require('ramda');
 const async = require('async');
-const U = require('../utils')
+const H = require('../helpers');
 const t = require('../infra/tcomb');
 const { ComponentDependencies } = require('../structures');
 
@@ -84,7 +84,7 @@ function classicResolver(registration, container) {
     let resolvedDependencies = {};
     dependencies.forEach(dependency => {
       const resolvedDependency = container.resolve(dependency);
-      const newDependency = U.generateMapFromPath(dependency, resolvedDependency);
+      const newDependency = H.generateMapFromPath(dependency, resolvedDependency);
       resolvedDependencies = R.mergeDeepRight(resolvedDependencies, newDependency);
     });
     return next(null, resolvedDependencies);
@@ -106,7 +106,7 @@ function classicResolver(registration, container) {
     Object.values(container.registrations).forEach(registration => {
       const { id } = registration;
       if (id === exclude.id) return;
-      const newSelector = U.generateMapFromPath(id, id);
+      const newSelector = H.generateMapFromPath(id, id);
       selectors = R.mergeDeepRight(selectors, newSelector);
     });
 

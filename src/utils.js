@@ -14,7 +14,7 @@ function catchError(targetFn, inputOpts = {}) {
   throw new Error(options.message || `This function was supposed to throw and error:\n${targetFn}`)
 }
 
-function joinRight(paths, separator) {
+function joinRight(paths, separator = '.') {
   return paths.reduce((acc, path, index) => {
     if (index + 1 === paths.length) separator = '';
     if (path) return acc + path + separator;

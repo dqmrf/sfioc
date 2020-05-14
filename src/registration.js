@@ -1,3 +1,4 @@
+const U = require('./utils');
 const t = require('./infra/tcomb');
 const { ComponentTypes, REGISTRATION, COMPONENT_OPTIONS } = require('./constants');
 
@@ -28,7 +29,10 @@ function createRegistration(component, options = {}) {
     groupId: options.groupId || null,
     target: prepareTarget(),
     lifetime: componentOpts.lifetime,
-    dependencies: componentOpts.dependsOn
+    dependencies: componentOpts.dependsOn,
+    get path() {
+      return U.joinRight([this.groupId, this.id])
+    },
   };
 
   function prepareTarget() {

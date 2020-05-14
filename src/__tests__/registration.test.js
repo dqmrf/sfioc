@@ -1,7 +1,7 @@
 const { catchError } = require('../utils');
 const { SfiocTypeError } = require('../errors');
 const { createRegistration } = require('../registration');
-const { componentWrapper } = require('../component');
+const { createComponent } = require('../component');
 const { ComponentTypes, Lifetime, REGISTRATION } = require('../constants');
 
 const stubTarget = jest.fn();
@@ -13,7 +13,7 @@ describe('createRegistration', () => {
       lifetime: Lifetime.SINGLETON,
       dependsOn: ['dependency1', 'dependency2']
     }
-    const component = componentWrapper(stubTarget, options);
+    const component = createComponent(stubTarget, options);
     const registration = createRegistration(component);
 
     expect(typeof registration).toBe('object');
@@ -23,7 +23,7 @@ describe('createRegistration', () => {
   });
 
   it('wraps components target function correctly', () => {
-    const component = componentWrapper(() => 228).fn();
+    const component = createComponent(() => 228).fn();
     const registration = createRegistration(component);
 
     expect(typeof registration.target).toBe('function');
@@ -31,7 +31,7 @@ describe('createRegistration', () => {
   });
 
   it('wraps components target value correctly', () => {
-    const component = componentWrapper(228).value();
+    const component = createComponent(228).value();
     const registration = createRegistration(component);
 
     expect(typeof registration.target).toBe('function');
@@ -40,7 +40,7 @@ describe('createRegistration', () => {
 
   it('wraps components target class correctly', () => {
     class TestClass { getValue = () => 228; }
-    const component = componentWrapper(TestClass).class();
+    const component = createComponent(TestClass).class();
     const registration = createRegistration(component);
 
     expect(typeof registration.target).toBe('function');
@@ -48,7 +48,7 @@ describe('createRegistration', () => {
   });
 
   it('throws an SfiocTypeError when the component target doesn\'t match its type', () => {
-    const component = componentWrapper('wrongTarget').fn();
+    const component = createComponent('wrongTarget').fn();
     const error = catchError(() => createRegistration(component));
 
     expect(error).toBeTruthy();

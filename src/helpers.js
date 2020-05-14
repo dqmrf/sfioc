@@ -1,4 +1,4 @@
-const { ElementTypes, ELEMENT, REGISTRATION } = require('../constants');
+const { ElementTypes, ELEMENT, REGISTRATION } = require('./constants');
 
 function getElementType(element) {
   return isElement(element) ? element._sfElementType : undefined;

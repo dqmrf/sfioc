@@ -144,13 +144,9 @@ app.start(wrongUserId);
 ## TODO:
 ### Necessary
 - Create 'dependsOn' build option.
-- Update component and group exports (and generally wherever possible).
-- Rename container global options for components.
-- Prettify 'resolve' method input params.
 
 ### Secondary
 - Group resolving implementation.
-- Proxy with dependencies. Nested proxies?
 - Angular-like dependencies.
 - Probably it's not needed to mutate container element inside 'updateComponentOptions' method.
 - Validator: expand 'struct' structure when t.handler throws an error.

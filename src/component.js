@@ -27,7 +27,7 @@ const defaultOptions = {
  * @return {object}
  * Container 'COMPONENT' element that can be registered.
  */
-function componentWrapper(target, options = {}) {
+function createComponent(target, options = {}) {
   const component = {
     target,
     [COMPONENT_OPTIONS]: R.clone(defaultOptions)
@@ -48,11 +48,11 @@ function componentWrapper(target, options = {}) {
     }
   });
 
-  updateComponentOptions(component, options);
-  return createComponentBuildOptions(component);
+  updateOptions(component, options);
+  return createBuildOptions(component);
 }
 
-function createComponentBuildOptions(source) {
+function createBuildOptions(source) {
   const builder = {
     ...source,
     setLifetime,
@@ -74,12 +74,12 @@ function createComponentBuildOptions(source) {
   }
 
   function update(name, value) {
-    updateComponentOptions(source, { [name]: value });
+    updateOptions(source, { [name]: value });
     return builder;
   }
 }
 
-function updateComponentOptions(source, inputOptions, ...args) {
+function updateOptions(source, inputOptions, ...args) {
   const newOptions = args.reduce((acc, options) => {
     return Object.assign({}, acc, options || {});
   }, inputOptions || {});
@@ -93,11 +93,11 @@ function updateComponentOptions(source, inputOptions, ...args) {
 
   return Object.assign(
     source[COMPONENT_OPTIONS],
-    filterComponentOptions(newOptions)
+    filterOptions(newOptions)
   );
 }
 
-function filterComponentOptions(options) {
+function filterOptions(options) {
   const result = {};
   for (let optionName in options) {
     if (!defaultOptions.hasOwnProperty(optionName)) continue;
@@ -113,9 +113,8 @@ function partial(fn, ...args) {
 }
 
 module.exports = {
-  componentWrapper,
-  updateComponentOptions,
-  filterComponentOptions,
-  createComponentBuildOptions,
-  COMPONENT_OPTIONS
+  createComponent,
+  updateOptions,
+  filterOptions,
+  createBuildOptions
 };

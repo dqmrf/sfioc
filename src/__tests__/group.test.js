@@ -1,7 +1,7 @@
 const { catchError } = require('../utils');
 const { SfiocTypeError } = require('../errors');
-const { groupWrapper } = require('../group');
-const { componentWrapper } = require('../component');
+const { createGroup } = require('../group');
+const { createComponent } = require('../component');
 const {
   ElementTypes,
   Lifetime,
@@ -12,11 +12,11 @@ const {
 
 const stubTarget = jest.fn();
 
-describe('groupWrapper', () => {
+describe('create', () => {
   it('returns a group with its components', () => {
-    const component1 = componentWrapper(stubTarget);
-    const component2 = componentWrapper(stubTarget);
-    const group = groupWrapper({ component1, component2 });
+    const component1 = createComponent(stubTarget);
+    const component2 = createComponent(stubTarget);
+    const group = createGroup({ component1, component2 });
 
     expect(typeof group).toBe('object');
     expect(group._sfType).toEqual(ELEMENT);
@@ -28,17 +28,17 @@ describe('groupWrapper', () => {
   });
 
   it('deals with nested groups', () => {
-    const nestedComponent1 = componentWrapper(stubTarget);
-    const nestedComponent2 = componentWrapper(stubTarget);
-    const component1 = componentWrapper(stubTarget);
-    const component2 = componentWrapper(stubTarget);
+    const nestedComponent1 = createComponent(stubTarget);
+    const nestedComponent2 = createComponent(stubTarget);
+    const component1 = createComponent(stubTarget);
+    const component2 = createComponent(stubTarget);
 
-    const nestedGroup = groupWrapper({
+    const nestedGroup = createGroup({
       nestedComponent1,
       nestedComponent2
     });
 
-    const group = groupWrapper({
+    const group = createGroup({
       component1,
       component2,
       nestedGroup
@@ -53,7 +53,7 @@ describe('groupWrapper', () => {
   });
 
   it('throws an SfiocTypeError when called without params', () => {
-    const error = catchError(() => groupWrapper());
+    const error = catchError(() => createGroup());
 
     expect(error).toBeTruthy();
     expect(error).toBeInstanceOf(SfiocTypeError);
@@ -61,7 +61,7 @@ describe('groupWrapper', () => {
   });
 
   it('throws an SfiocTypeError when called with wrong params', () => {
-    const error = catchError(() => groupWrapper('wrongParam'));
+    const error = catchError(() => createGroup('wrongParam'));
 
     expect(error).toBeTruthy();
     expect(error).toBeInstanceOf(SfiocTypeError);
@@ -69,10 +69,10 @@ describe('groupWrapper', () => {
   });
 
   it(`lets me setup '${COMPONENT_OPTIONS}' without builders`, () => {
-    const component1 = componentWrapper(228).value().class();
-    const component2 = componentWrapper(stubTarget).class();
+    const component1 = createComponent(228).value().class();
+    const component2 = createComponent(stubTarget).class();
 
-    const group = groupWrapper({
+    const group = createGroup({
       component1,
       component2
     }, {

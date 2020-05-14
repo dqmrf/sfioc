@@ -1,12 +1,12 @@
 const container = require('./container');
-const { componentWrapper } = require('./component');
-const { groupWrapper } = require('./group');
+const { createGroup } = require('./group');
+const { createComponent } = require('./component');
 const { ComponentTypes, Lifetime, InjectionMode } = require('./constants');
 
 module.exports = {
   ...container,
-  component: componentWrapper,
-  group: groupWrapper,
+  component: createComponent,
+  group: createGroup,
   InjectionMode,
   ComponentTypes,
   Lifetime
