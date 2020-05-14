@@ -176,8 +176,8 @@ describe('container', () => {
       expect(app.stuff()).toBe('stuff');
     });
 
-    it(`overwrites '${COMPONENT_OPTIONS}' of groups nested components`, () => {
-      const component1 = createComponent(stubTarget).transient();
+    it(`overwrites '${COMPONENT_OPTIONS}' of groups nested components properly`, () => {
+      const component1 = createComponent(stubTarget);
       const component2 = createComponent(stubTarget).transient();
 
       const group = createGroup(
@@ -188,16 +188,15 @@ describe('container', () => {
       container.register({ group });
       const { registrations } = container;
 
-      Object.values(registrations).forEach(registration => {
-        expect(registration.lifetime).toEqual(Lifetime.SINGLETON);
-      });
+      expect(registrations['group.component1'].lifetime).toEqual(Lifetime.SINGLETON);
+      expect(registrations['group.component2'].lifetime).toEqual(Lifetime.TRANSIENT);
     });
 
-    it(`overwrites '${COMPONENT_OPTIONS}' of groups nested groups with its components`, () => {
-      const nestedComponent1 = createComponent(stubTarget).transient();
+    it(`overwrites '${COMPONENT_OPTIONS}' of groups nested groups with its components properly`, () => {
+      const nestedComponent1 = createComponent(stubTarget).singleton();
       const nestedComponent2 = createComponent(stubTarget).class();
-      const component1 = createComponent(stubTarget).value().singleton();
-      const component2 = createComponent(stubTarget).class().singleton();
+      const component1 = createComponent(stubTarget).value();
+      const component2 = createComponent(stubTarget).transient();
 
       const nestedGroup = createGroup({
         nestedComponent1,
@@ -208,23 +207,25 @@ describe('container', () => {
         component1,
         component2,
         nestedGroup
-      }).singleton().fn();
+      }).singleton().class();
 
       container.register({ group });
       const { registrations } = container;
 
-      Object.values(registrations).forEach(registration => {
-        expect(registration.lifetime).toEqual(Lifetime.SINGLETON);
-      });
+      expect(registrations['group.component1'].lifetime).toEqual(Lifetime.SINGLETON);
+      expect(registrations['group.component2'].lifetime).toEqual(Lifetime.TRANSIENT);
+
+      expect(registrations['group.nestedGroup.nestedComponent1'].lifetime).toEqual(Lifetime.SINGLETON);
+      expect(registrations['group.nestedGroup.nestedComponent2'].lifetime).toEqual(Lifetime.TRANSIENT);
     });
 
-    it(`lets global '${COMPONENT_OPTIONS}' overwrite '${COMPONENT_OPTIONS}' of all of it's children`, () => {
+    it(`lets global '${COMPONENT_OPTIONS}' overwrite '${COMPONENT_OPTIONS}' of all of it's children properly`, () => {
       container = createContainer({ lifetime: Lifetime.SINGLETON });
 
       const nestedComponent1 = createComponent(stubTarget).transient();
-      const nestedComponent2 = createComponent(stubTarget).class();
-      const component1 = createComponent(stubTarget).value().singleton();
-      const component2 = createComponent(stubTarget).class().transient();
+      const nestedComponent2 = createComponent(stubTarget);
+      const component1 = createComponent(stubTarget);
+      const component2 = createComponent(stubTarget).transient();
 
       const nestedGroup = createGroup({
         nestedComponent1,
@@ -235,14 +236,16 @@ describe('container', () => {
         component1,
         component2,
         nestedGroup
-      }).transient().fn();
+      });
 
       container.register({ group });
       const { registrations } = container;
 
-      Object.values(registrations).forEach(registration => {
-        expect(registration.lifetime).toEqual(Lifetime.SINGLETON);
-      });
+      expect(registrations['group.component1'].lifetime).toEqual(Lifetime.SINGLETON);
+      expect(registrations['group.component2'].lifetime).toEqual(Lifetime.TRANSIENT);
+
+      expect(registrations['group.nestedGroup.nestedComponent1'].lifetime).toEqual(Lifetime.TRANSIENT);
+      expect(registrations['group.nestedGroup.nestedComponent2'].lifetime).toEqual(Lifetime.SINGLETON);
     });
   });
 

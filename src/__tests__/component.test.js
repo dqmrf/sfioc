@@ -26,24 +26,6 @@ describe('create', () => {
     expect(component[COMPONENT_OPTIONS]).toStrictEqual(options)
   });
 
-  it('replaces missing options with defaults (without options passed)', () => {
-    const component = createComponent(stubTarget);
-    const componentOpts = component[COMPONENT_OPTIONS];
-
-    expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
-    expect(componentOpts.lifetime).toEqual(Lifetime.TRANSIENT);
-  });
-
-  it('replaces missing options with defaults (with some options passed)', () => {
-    const component = createComponent(stubTarget, {
-      lifetime: Lifetime.SINGLETON
-    });
-    const componentOpts = component[COMPONENT_OPTIONS];
-
-    expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
-    expect(componentOpts.lifetime).toEqual(Lifetime.SINGLETON);
-  });
-
   it(`removes unnecessary options, thay don't break anything`, () => {
     const options = {
       type: ComponentTypes.FUNCTION,

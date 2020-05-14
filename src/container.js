@@ -7,12 +7,20 @@ const { createResolver } = require('./resolver');
 const { SfiocResolutionError } = require('./errors');
 const { createRegistration } = require('./registration');
 const { Elements, ContainerOptions } = require('./structures');
-const { InjectionMode, Lifetime, ElementTypes, COMPONENT_OPTIONS } = require('./constants');
+const {
+  InjectionMode,
+  Lifetime,
+  ElementTypes,
+  ComponentTypes,
+  COMPONENT_OPTIONS
+} = require('./constants');
 
 const { COMPONENT, GROUP } = ElementTypes;
 
 const defaultOptions = {
-  injectionMode: InjectionMode.CLASSIC
+  injectionMode: InjectionMode.CLASSIC,
+  type: ComponentTypes.FUNCTION,
+  lifetime: Lifetime.TRANSIENT,
 }
 
 /**
@@ -101,10 +109,11 @@ function createContainer(containerOptions = {}) {
       const element = elements[elementId];
       const elementPath = U.joinRight([parentGroup.id, elementId]);
 
-      component.updateOptions(
+      component.updateKinOptions(
         element,
+        componentOptions,
         parentGroup[COMPONENT_OPTIONS],
-        componentOptions
+        element[COMPONENT_OPTIONS]
       );
 
       switch(H.getElementType(element)) {

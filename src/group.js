@@ -3,10 +3,6 @@ const H = require('./helpers');
 const component = require('./component');
 const { ElementTypes, ELEMENT, COMPONENT_OPTIONS } = require('./constants');
 
-const handler = t.createHandler({
-  description: 'Sfioc.createGroup'
-});
-
 /**
  * Prepares the group of dependencies (or groups) for registration.
  *
@@ -21,9 +17,10 @@ const handler = t.createHandler({
  */
 function createGroup(elements, options = {}) {
   const group = {
-    elements: handler.handle(elements, {
+    elements: t.handle(elements, {
+      description: 'Sfioc.createGroup',
+      paramName: 'elements',
       validator: t.Object,
-      paramName: 'elements'
     }).value,
     [COMPONENT_OPTIONS]: {}
   };
@@ -43,7 +40,7 @@ function createGroup(elements, options = {}) {
     }
   });
 
-  component.updateOptions(group, options);
+  component.updateKinOptions(group, options);
   return H.createBuildOptions(group, component.buildOptions);
 }
 

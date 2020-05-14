@@ -10,11 +10,9 @@ const {
   COMPONENT_OPTIONS
 } = require('./constants');
 
-const defaultOptions = {
-  type: ComponentTypes.FUNCTION,
-  lifetime: Lifetime.TRANSIENT,
-  dependsOn: null
-}
+const allowedOptions = [
+  'dependsOn', 'type', 'lifetime'
+];
 
 /**
  * Prepares the dependency for registration.
@@ -31,7 +29,7 @@ const defaultOptions = {
 function createComponent(target, options = {}) {
   const component = {
     target,
-    [COMPONENT_OPTIONS]: R.clone(defaultOptions)
+    [COMPONENT_OPTIONS]: {}
   };
 
   Object.defineProperties(component, {
@@ -60,6 +58,7 @@ function createComponent(target, options = {}) {
 
 function componentBuildOptions() {
   return {
+    setType,
     setLifetime,
     singleton: partial(setLifetime, Lifetime.SINGLETON),
     transient: partial(setLifetime, Lifetime.TRANSIENT),
@@ -108,7 +107,7 @@ function updateOptions(source, inputOptions, ...args) {
 function filterOptions(options) {
   const result = {};
   for (let optionName in options) {
-    if (!defaultOptions.hasOwnProperty(optionName)) continue;
+    if (!allowedOptions.includes(optionName)) continue;
     result[optionName] = options[optionName];
   }
   return result;
@@ -122,7 +121,7 @@ function partial(fn, ...args) {
 
 module.exports = {
   createComponent,
-  updateOptions,
   filterOptions,
+  updateKinOptions: updateOptions,
   buildOptions: componentBuildOptions
 };
