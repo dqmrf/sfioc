@@ -1,10 +1,10 @@
 const R = require('ramda');
-const async = require('async');
 const U = require('./utils');
 const t = require('./infra/tcomb');
+const { createResolver } = require('./resolver');
 const { SfiocResolutionError } = require('./errors');
 const { createRegistration } = require('./registration');
-const { Elements, ComponentDependencies, ContainerOptions } = require('./structures');
+const { Elements, ContainerOptions } = require('./structures');
 const { InjectionMode, Lifetime, ElementTypes, COMPONENT_OPTIONS } = require('./constants');
 const { updateComponentOptions, filterComponentOptions } = require('./component');
 
@@ -45,16 +45,18 @@ function createContainer(containerOptions = {}) {
   // Used when PROXY injection mode selected.
   const resolvers = proxify(registrations);
 
-  // Registration that is currently resolving.
-  let registration = null;
-
   // Container itself.
   const container = {
+    options: containerOptions,
     register,
     resolve,
     registrations,
-    cache
+    cache,
+    resolvers
   }
+
+  // For resolving the current registration.
+  const resolver = createResolver(container);
 
   return container;
 
@@ -143,6 +145,8 @@ function createContainer(containerOptions = {}) {
    * Whatever was resolved.
    */
   function resolve(arg) {
+    let registration;
+
     if (R.type(arg) === 'String') {
       registration = registrations[arg];
     }
@@ -170,13 +174,13 @@ function createContainer(containerOptions = {}) {
     let resolved, cached;
     switch (registration.lifetime) {
       case Lifetime.TRANSIENT: {
-        resolved = resolveRegistration();
+        resolved = resolver.resolve(registration);
         break;
       }
       case Lifetime.SINGLETON: {
         cached = cache.get(id);
         if (!cached) {
-          resolved = resolveRegistration();
+          resolved = resolver.resolve(registration);
           cache.set(id, resolved);
         } else {
           resolved = cached;
@@ -196,147 +200,6 @@ function createContainer(containerOptions = {}) {
     registration = R.last(resolutionStack);
 
     return resolved;
-  }
-
-  /**
-   * Resolves the dependencies of the given registration.
-   *
-   * @param {object} registration
-   * The registration to resolve.
-   *
-   * @return {any}
-   * Whatever was resolved.
-   */
-  function resolveRegistration() {
-    const { injectionMode } = containerOptions;
-
-    switch (injectionMode) {
-      case InjectionMode.CLASSIC:
-        return resolveRegistrationClassic();
-      case InjectionMode.PROXY:
-        return resolveRegistrationProxy();
-      default: {
-        throw new SfiocResolutionError(
-          registration.id,
-          resolutionStack,
-          `Unknown injection mode "${injectionMode}"`
-        );
-      }
-    }
-  }
-
-  function resolveRegistrationClassic() {
-    let resolvedTarget;
-
-    async.seq(
-      prepareTargetDependencies,
-      resolveTargetDependencies
-    )((err, resolvedDependencies) => {
-      const { target } = registration;
-
-      if (err) {
-        resolvedTarget = target();
-      } else {
-        resolvedTarget = target(resolvedDependencies);
-      }
-    });
-
-    return resolvedTarget;
-  }
-
-  function resolveRegistrationProxy() {
-    return registration.target(resolvers);
-  }
-
-  /**
-   * Transforms dependencies of the given registration to an Array.
-   *
-   * @param {object} registration
-   * The registration.
-   *
-   * @param {function} next
-   * Callback to the next step.
-   *
-   * @return {array}
-   * Adapted dependencies for further use.
-   */
-  function prepareTargetDependencies(next) {
-    return prepare(registration.dependencies, next);
-
-    function prepare(dependsOn, next) {
-      if (!dependsOn || R.isEmpty(dependsOn)) return next(1);
-
-      switch (R.type(dependsOn)) {
-        case 'Array': {
-          return next(null, dependsOn);
-        }
-        case 'String': {
-          return next(null, [dependsOn]);
-        }
-        case 'Function': {
-          const selectors = generateDependenciesSelectors(registration);
-          const dependencies = dependsOn(selectors);
-
-          // This validation is necessary here, because we just called the
-          // callback provided by the user, and injected the selectors inside.
-          // Callback may return some unexpected value, and we need to validate it.
-          t.handle(dependencies, {
-            validator: ComponentDependencies,
-            description: 'Sfioc.resolve',
-            message: (`"dependsOn" callback must return the (String | Array)` +
-            ` with dependency names, but got: (${R.type(dependencies)})`)
-          });
-
-          return prepare(dependencies, next);
-        }
-      }
-    }
-  }
-
-  /**
-   * 1. Resolves all of the given dependencies (for current registration).
-   * 2. Creates a single map with all of the resolved dependencies.
-   *
-   * @param {array} dependencies
-   * The registration to resolve.
-   *
-   * @param {function} next
-   * Callback to the next step.
-   *
-   * @return {object}
-   * Map with resolved dependencies that will be injected into the target function.
-   */
-  function resolveTargetDependencies(dependencies, next) {
-    let resolvedDependencies = {};
-    dependencies.forEach(dependency => {
-      const resolvedDependency = resolve(dependency);
-      const newDependency = U.generateMapFromPath(dependency, resolvedDependency);
-      resolvedDependencies = R.mergeDeepRight(resolvedDependencies, newDependency);
-    });
-    return next(null, resolvedDependencies);
-  }
-
-  /**
-   * Generate selectors with registrations to pass them to the 'dependsOn'
-   * callback in the future.
-   *
-   * @param {object} registration
-   * The registration to exclude.
-   *
-   * @return {object}
-   * Ready selectors.
-   */
-  function generateDependenciesSelectors(exclude = {}) {
-    let selectors = {};
-
-    Object.values(registrations).forEach(registration => {
-      const { id } = registration;
-      if (id === exclude.id) return;
-      const newSelector = U.generateMapFromPath(id, id);
-      selectors = R.mergeDeepRight(selectors, newSelector);
-    });
-
-    return selectors;
   }
 
   /**
