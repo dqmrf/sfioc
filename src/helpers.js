@@ -34,11 +34,26 @@ function generateMapFromPath(name, dependency, options = {}) {
   }
 }
 
+// TODO: It shouldn't be here.
+function createBuildOptions(source, ...optionsList) {
+  const buildOptions = {};
+
+  optionsList.forEach(options => {
+    Object.assign(buildOptions, options());
+  });
+
+  return {
+    ...source,
+    ...buildOptions
+  }
+}
+
 module.exports = {
   getElementType,
   isElement,
   isComponent,
   isGroup,
   isRegistration,
+  createBuildOptions,
   generateMapFromPath
 }

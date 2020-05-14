@@ -1,4 +1,5 @@
 const t = require('./infra/tcomb');
+const H = require('./helpers');
 const component = require('./component');
 const { ElementTypes, ELEMENT, COMPONENT_OPTIONS } = require('./constants');
 
@@ -43,7 +44,7 @@ function createGroup(elements, options = {}) {
   });
 
   component.updateOptions(group, options);
-  return component.createBuildOptions(group);
+  return H.createBuildOptions(group, component.buildOptions);
 }
 
 module.exports = {

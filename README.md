@@ -143,7 +143,6 @@ app.start(wrongUserId);
 
 ## TODO:
 ### Necessary
-- Create 'dependsOn' build option.
 
 ### Secondary
 - Group resolving implementation.

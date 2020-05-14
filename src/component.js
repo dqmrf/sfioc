@@ -1,4 +1,5 @@
 const R = require('ramda');
+const H = require('./helpers');
 const t = require('./infra/tcomb');
 const { ComponentOptions } = require('./structures');
 const {
@@ -49,12 +50,16 @@ function createComponent(target, options = {}) {
   });
 
   updateOptions(component, options);
-  return createBuildOptions(component);
+
+  return H.createBuildOptions(
+    component,
+    componentBuildOptions,
+    componentOnlyBuildOptions
+  );
 }
 
-function createBuildOptions(source) {
-  const builder = {
-    ...source,
+function componentBuildOptions() {
+  return {
     setLifetime,
     singleton: partial(setLifetime, Lifetime.SINGLETON),
     transient: partial(setLifetime, Lifetime.TRANSIENT),
@@ -63,19 +68,20 @@ function createBuildOptions(source) {
     class: partial(setType, ComponentTypes.CLASS)
   }
 
-  return builder;
-
   function setLifetime(value) {
-    return update('lifetime', value);
+    return updateOptions(this, { lifetime: value });
   }
 
   function setType(value) {
-    return update('type', value);
+    return updateOptions(this, { type: value });
   }
+}
 
-  function update(name, value) {
-    updateOptions(source, { [name]: value });
-    return builder;
+function componentOnlyBuildOptions() {
+  return { dependsOn }
+
+  function dependsOn(value) {
+    return updateOptions(this, { dependsOn: value });
   }
 }
 
@@ -91,10 +97,12 @@ function updateOptions(source, inputOptions, ...args) {
     paramName: COMPONENT_OPTIONS
   });
 
-  return Object.assign(
+  Object.assign(
     source[COMPONENT_OPTIONS],
     filterOptions(newOptions)
   );
+
+  return source;
 }
 
 function filterOptions(options) {
@@ -116,5 +124,5 @@ module.exports = {
   createComponent,
   updateOptions,
   filterOptions,
-  createBuildOptions
+  buildOptions: componentBuildOptions
 };

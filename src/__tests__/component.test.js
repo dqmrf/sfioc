@@ -95,10 +95,31 @@ describe('builder options', () => {
     expect(componentOpts.type).toEqual(ComponentTypes.CLASS);
   });
 
+  describe('dependsOn', () => {
+    it(`sets component dependencies`, () => {
+      const dependencies = ['ukraine', 'eniarku']
+      const component = createComponent(stubTarget).dependsOn(dependencies);
+      const componentOpts = component[COMPONENT_OPTIONS];
+
+      expect(componentOpts.dependsOn).toEqual(dependencies);
+    });
+
+    it(`overrides component dependencies`, () => {
+      const dependencies = ['cow', 'pig'];
+      const component = createComponent(stubTarget, {
+        dependsOn: ['orange', 'apple']
+      }).dependsOn(dependencies);
+      const componentOpts = component[COMPONENT_OPTIONS];
+
+      expect(componentOpts.dependsOn).toEqual(dependencies);
+    });
+  });
+
   describe('singleton', () => {
     it(`changes component 'lifetime' to 'SINGLETON'`, () => {
       const component = createComponent(stubTarget).singleton();
       const componentOpts = component[COMPONENT_OPTIONS];
+
       expect(componentOpts.lifetime).toEqual(Lifetime.SINGLETON);
     });
   });
@@ -109,6 +130,7 @@ describe('builder options', () => {
                           .singleton()
                           .transient();
       const componentOpts = component[COMPONENT_OPTIONS];
+
       expect(componentOpts.lifetime).toEqual(Lifetime.TRANSIENT);
     });
   });
@@ -119,6 +141,7 @@ describe('builder options', () => {
     it(`changes component 'type' to 'FUNCTION'`, () => {
       const component = createComponent(valueGetter).fn();
       const componentOpts = component[COMPONENT_OPTIONS];
+
       expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
     });
   });
@@ -129,6 +152,7 @@ describe('builder options', () => {
     it(`changes component 'type' to 'VALUE'`, () => {
       const component = createComponent(value).value();
       const componentOpts = component[COMPONENT_OPTIONS];
+
       expect(componentOpts.type).toEqual(ComponentTypes.VALUE);
     });
   });
@@ -139,6 +163,7 @@ describe('builder options', () => {
     it(`changes component 'type' to 'CLASS'`, () => {
       const component = createComponent(TestClass).class();
       const componentOpts = component[COMPONENT_OPTIONS];
+
       expect(componentOpts.type).toEqual(ComponentTypes.CLASS);
     });
   });
