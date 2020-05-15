@@ -1,41 +1,34 @@
-const R = require('ramda');
+import R from 'ramda'
 
-function partial(fn, ...args) {
+export function partial(fn, ...args) {
   return function partiallyApplied() {
-    return fn.apply(this, args);
+    return fn.apply(this, args)
   }
 }
 
-function catchError(targetFn, inputOpts = {}) {
+export function catchError(targetFn, inputOpts = {}) {
   const defaults = { message: null, throwError: false }
-  const options = R.mergeRight(defaults, inputOpts);
+  const options = R.mergeRight(defaults, inputOpts)
 
   try {
-    targetFn();
+    targetFn()
   } catch(err) {
-    return err;
+    return err
   }
 
-  if (!options.throwError) return null;
+  if (!options.throwError) return null
   throw new Error(options.message || `This function was supposed to throw and error:\n${targetFn}`)
 }
 
-function joinRight(paths, separator = '.') {
+export function joinRight(paths, separator = '.') {
   return paths.reduce((acc, path, index) => {
-    if (index + 1 === paths.length) separator = '';
-    if (path) return acc + path + separator;
-    return acc;
-  }, '');
+    if (index + 1 === paths.length) separator = ''
+    if (path) return acc + path + separator
+    return acc
+  }, '')
 }
 
-function setMainOption(arg, mainOption) {
-  if (typeof arg === 'object') return arg;
+export function setMainOption(arg, mainOption) {
+  if (typeof arg === 'object') return arg
   return { [mainOption]: arg }
-}
-
-module.exports = {
-  partial,
-  catchError,
-  joinRight,
-  setMainOption
 }

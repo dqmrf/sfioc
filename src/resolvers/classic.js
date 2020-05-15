@@ -1,26 +1,26 @@
-const R = require('ramda');
-const async = require('async');
-const H = require('../helpers');
-const t = require('../infra/tcomb');
-const { ComponentDependencies } = require('../structures');
+import R from 'ramda'
+import async from 'async'
+import * as H from '../helpers'
+import t from '../infra/tcomb'
+import { ComponentDependencies } from '../structures'
 
-function classicResolver(registration, container) {
-  let resolved;
+export function classicResolver(registration, container) {
+  let resolved
 
   async.seq(
     prepareTargetDependencies,
     resolveTargetDependencies
   )((err, resolvedDependencies) => {
-    const { target } = registration;
+    const { target } = registration
 
     if (err) {
-      resolved = target();
+      resolved = target()
     } else {
-      resolved = target(resolvedDependencies);
+      resolved = target(resolvedDependencies)
     }
-  });
+  })
 
-  return resolved;
+  return resolved
 
   /**
    * Transforms dependencies of the given registration to an Array.
@@ -35,21 +35,21 @@ function classicResolver(registration, container) {
    * Adapted dependencies for further use.
    */
   function prepareTargetDependencies(next) {
-    return prepare(registration.dependencies);
+    return prepare(registration.dependencies)
 
     function prepare(dependsOn) {
-      if (!dependsOn || R.isEmpty(dependsOn)) return next(1);
+      if (!dependsOn || R.isEmpty(dependsOn)) return next(1)
 
       switch (R.type(dependsOn)) {
         case 'Array': {
-          return next(null, dependsOn);
+          return next(null, dependsOn)
         }
         case 'String': {
-          return next(null, [dependsOn]);
+          return next(null, [dependsOn])
         }
         case 'Function': {
-          const selectors = generateDependenciesSelectors(registration);
-          const dependencies = dependsOn(selectors);
+          const selectors = generateDependenciesSelectors(registration)
+          const dependencies = dependsOn(selectors)
 
           // This validation is necessary here, because we just called the
           // callback provided by the user, and injected the selectors inside.
@@ -59,9 +59,9 @@ function classicResolver(registration, container) {
             description: 'Sfioc.resolve',
             message: (`"dependsOn" callback must return the (String | Array)` +
             ` with dependency names, but got: (${R.type(dependencies)})`)
-          });
+          })
 
-          return prepare(dependencies, next);
+          return prepare(dependencies, next)
         }
       }
     }
@@ -81,13 +81,13 @@ function classicResolver(registration, container) {
    * Map with resolved dependencies that will be injected into the target function.
    */
   function resolveTargetDependencies(dependencies, next) {
-    let resolvedDependencies = {};
+    let resolvedDependencies = {}
     dependencies.forEach(dependency => {
-      const resolvedDependency = container.resolve(dependency);
-      const newDependency = H.generateMapFromPath(dependency, resolvedDependency);
-      resolvedDependencies = R.mergeDeepRight(resolvedDependencies, newDependency);
-    });
-    return next(null, resolvedDependencies);
+      const resolvedDependency = container.resolve(dependency)
+      const newDependency = H.generateMapFromPath(dependency, resolvedDependency)
+      resolvedDependencies = R.mergeDeepRight(resolvedDependencies, newDependency)
+    })
+    return next(null, resolvedDependencies)
   }
 
   /**
@@ -101,19 +101,15 @@ function classicResolver(registration, container) {
    * Ready selectors.
    */
   function generateDependenciesSelectors(exclude = {}) {
-    let selectors = {};
+    let selectors = {}
 
     Object.values(container.registrations).forEach(registration => {
-      const { id } = registration;
-      if (id === exclude.id) return;
-      const newSelector = H.generateMapFromPath(id, id);
-      selectors = R.mergeDeepRight(selectors, newSelector);
-    });
+      const { id } = registration
+      if (id === exclude.id) return
+      const newSelector = H.generateMapFromPath(id, id)
+      selectors = R.mergeDeepRight(selectors, newSelector)
+    })
 
-    return selectors;
+    return selectors
   }
-}
-
-module.exports = {
-  classicResolver
 }

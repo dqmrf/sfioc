@@ -1,13 +1,13 @@
-const container = require('./container');
-const { createGroup } = require('./group');
-const { createComponent } = require('./component');
-const { ResolveAs, Lifetime, InjectionMode } = require('./constants');
+import { createContainer } from './container'
+import { createGroup as group }  from './group'
+import { createComponent as component }  from './component'
+import { ResolveAs, Lifetime, InjectionMode } from './constants'
 
 module.exports = {
-  ...container,
-  component: createComponent,
-  group: createGroup,
-  InjectionMode,
+  createContainer,
+  component,
+  group,
   ResolveAs,
-  Lifetime
+  Lifetime,
+  InjectionMode
 }

@@ -1,18 +1,18 @@
-const U = require('./utils');
-const H = require('./helpers');
-const t = require('./infra/tcomb');
-const { ComponentOptions } = require('./structures');
-const {
+import * as U from './utils'
+import * as H from './helpers'
+import t from './infra/tcomb'
+import { ComponentOptions } from './structures'
+import {
   ResolveAs,
   Lifetime,
   ElementTypes,
   ELEMENT,
   COMPONENT_OPTIONS
-} = require('./constants');
+} from './constants'
 
 const allowedOptions = [
   'dependsOn', 'resolveAs', 'lifetime'
-];
+]
 
 /**
  * Prepares the dependency for registration.
@@ -26,11 +26,11 @@ const allowedOptions = [
  * @return {object}
  * Container 'COMPONENT' element that can be registered.
  */
-function createComponent(target, options = {}) {
+export function createComponent(target, options = {}) {
   const component = {
     target,
     [COMPONENT_OPTIONS]: updateOptions(null, options)
-  };
+  }
 
   Object.defineProperties(component, {
     '_sfType': {
@@ -45,16 +45,16 @@ function createComponent(target, options = {}) {
       configurable: false,
       writable: false
     }
-  });
+  })
 
   return H.createBuildOptions(
     component,
-    componentBuildOptions,
-    componentOnlyBuildOptions
-  );
+    buildOptions,
+    componentBuildOptions
+  )
 }
 
-function componentBuildOptions() {
+export function buildOptions() {
   return {
     resolveAs,
     setLifetime,
@@ -67,56 +67,49 @@ function componentBuildOptions() {
   }
 
   function setLifetime(value) {
-    return updateOptions(this, { lifetime: value });
+    return updateOptions(this, { lifetime: value })
   }
 
   function resolveAs(value) {
-    return updateOptions(this, { resolveAs: value });
+    return updateOptions(this, { resolveAs: value })
   }
 
   function updateComponentOptions(...options) {
-    return updateOptions(this, ...options);
+    return updateOptions(this, ...options)
   }
 }
 
-function componentOnlyBuildOptions() {
+function componentBuildOptions() {
   return { dependsOn }
 
   function dependsOn(value) {
-    return updateOptions(this, { dependsOn: value });
+    return updateOptions(this, { dependsOn: value })
   }
 }
 
-function updateOptions(source, inputOptions, ...args) {
+export function updateOptions(source, inputOptions, ...args) {
   const newOptions = args.reduce((acc, options) => {
-    return Object.assign({}, acc, options || {});
-  }, inputOptions || {});
+    return Object.assign({}, acc, options || {})
+  }, inputOptions || {})
 
   t.handle(newOptions, {
     validator: ComponentOptions,
     paramName: COMPONENT_OPTIONS
-  });
+  })
 
   const updatedOptions = Object.assign(
     (source ? source[COMPONENT_OPTIONS] : {}),
     filterOptions(newOptions)
-  );
+  )
 
-  return source || updatedOptions;
+  return source || updatedOptions
 }
 
-function filterOptions(options) {
-  const result = {};
+export function filterOptions(options) {
+  const result = {}
   for (let optionName in options) {
-    if (!allowedOptions.includes(optionName)) continue;
-    result[optionName] = options[optionName];
+    if (!allowedOptions.includes(optionName)) continue
+    result[optionName] = options[optionName]
   }
-  return result;
+  return result
 }
-
-module.exports = {
-  createComponent,
-  filterOptions,
-  updateRelatedOptions: updateOptions,
-  buildOptions: componentBuildOptions
-};

@@ -1,6 +1,4 @@
-const tv = require('tcomb-validation');
-const extensions = require('./extensions');
+import tv from 'tcomb-validation'
+import extensions from './extensions'
 
-const extended = tv.mixin(tv, extensions);
-
-module.exports = extended;
+export default tv.mixin(tv, extensions)

@@ -1,34 +1,30 @@
-const { InjectionMode } = require('./constants');
-const { SfiocResolutionError } = require('./errors');
-const { classicResolver, proxyResolver } = require('./resolvers');
+import { InjectionMode } from './constants'
+import { SfiocResolutionError } from './errors'
+import { classicResolver, proxyResolver } from './resolvers'
 
-function createResolver(container) {
+export function createResolver(container) {
   return { resolve: resolver }
 
   function resolver(registration) {
-    const { injectionMode } = container.options;
+    const { injectionMode } = container.options
 
-    let resolve;
+    let resolve
     switch (injectionMode) {
       case InjectionMode.CLASSIC:
-        resolve = classicResolver;
-        break;
+        resolve = classicResolver
+        break
       case InjectionMode.PROXY:
-        resolve = proxyResolver;
-        break;
+        resolve = proxyResolver
+        break
       default: {
         throw new SfiocResolutionError(
           registration.id,
           container.resolutionStack,
           `Unknown injection mode "${injectionMode}"`
-        );
+        )
       }
     }
 
-    return resolve(registration, container);
+    return resolve(registration, container)
   }
-}
-
-module.exports = {
-  createResolver
 }

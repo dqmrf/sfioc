@@ -1,12 +1,6 @@
-const U = require('./utils');
-const t = require('./infra/tcomb');
-const { ResolveAs, REGISTRATION, COMPONENT_OPTIONS } = require('./constants');
-
-const targetHandler = t.createHandler({
-  description: 'Sfioc.Registration',
-  validator: t.Function,
-  paramName: 'target'
-});
+import * as U from './utils'
+import t from './infra/tcomb'
+import { ResolveAs, REGISTRATION, COMPONENT_OPTIONS } from './constants'
 
 /**
  * Creates the container registration.
@@ -20,8 +14,14 @@ const targetHandler = t.createHandler({
  * @return {object}
  * Registration that will be pushed in the containers' 'registrations' storage.
  */
-function createRegistration(component, options = {}) {
-  const componentOpts = component[COMPONENT_OPTIONS];
+export function createRegistration(component, options = {}) {
+  const targetHandler = t.createHandler({
+    description: 'Sfioc.createRegistration',
+    validator: t.Function,
+    paramName: 'target'
+  })
+
+  const componentOpts = component[COMPONENT_OPTIONS]
 
   return {
     _sfType: REGISTRATION,
@@ -33,28 +33,24 @@ function createRegistration(component, options = {}) {
     get path() {
       return U.joinRight([this.groupId, this.id])
     },
-  };
+  }
 
   function prepareTarget() {
-    const { target } = component;
+    const { target } = component
 
     switch(componentOpts.resolveAs) {
       case ResolveAs.FUNCTION:
-        targetHandler.handle(target);
-        return target;
+        targetHandler.handle(target)
+        return target
       case ResolveAs.CLASS:
-        targetHandler.handle(target);
-        return newClass;
+        targetHandler.handle(target)
+        return newClass
       case ResolveAs.VALUE:
-        return () => target;
+        return () => target
     }
 
     function newClass() {
-      return Reflect.construct(target, arguments);
+      return Reflect.construct(target, arguments)
     }
   }
 }
-
-module.exports = {
-  createRegistration
-};
