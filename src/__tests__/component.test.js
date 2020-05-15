@@ -120,7 +120,7 @@ describe('builder options', () => {
   describe('fn', () => {
     let valueGetter = () => 228;
 
-    it(`changes component 'type' to 'FUNCTION'`, () => {
+    it(`changes component 'resolveAs' to 'FUNCTION'`, () => {
       const component = createComponent(valueGetter).fn();
       const componentOpts = component[COMPONENT_OPTIONS];
 
@@ -131,7 +131,7 @@ describe('builder options', () => {
   describe('value', () => {
     let value = 228;
 
-    it(`changes component 'type' to 'VALUE'`, () => {
+    it(`changes component 'resolveAs' to 'VALUE'`, () => {
       const component = createComponent(value).value();
       const componentOpts = component[COMPONENT_OPTIONS];
 
@@ -142,7 +142,7 @@ describe('builder options', () => {
   describe('class', () => {
     class TestClass { getValue = () => 228 }
 
-    it(`changes component 'type' to 'CLASS'`, () => {
+    it(`changes component 'resolveAs' to 'CLASS'`, () => {
       const component = createComponent(TestClass).class();
       const componentOpts = component[COMPONENT_OPTIONS];
 

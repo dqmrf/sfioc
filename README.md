@@ -143,12 +143,10 @@ app.start(wrongUserId);
 
 ## TODO:
 ### Necessary
-- Fix resolution stack displaying
 
 ### Secondary
 - Group resolving implementation.
 - Angular-like dependencies.
-- Probably it's not needed to mutate container element inside 'updateComponentOptions' method.
 - Validator: expand 'struct' structure when t.handler throws an error.
 - Webpack + babel?
 - Clean up* in tests.

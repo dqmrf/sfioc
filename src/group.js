@@ -22,7 +22,7 @@ function createGroup(elements, options = {}) {
       paramName: 'elements',
       validator: t.Object,
     }).value,
-    [COMPONENT_OPTIONS]: {}
+    [COMPONENT_OPTIONS]: component.updateRelatedOptions(null, options)
   };
 
   Object.defineProperties(group, {
@@ -40,7 +40,6 @@ function createGroup(elements, options = {}) {
     }
   });
 
-  component.updateComponentOptionsIn(group, options);
   return H.createBuildOptions(group, component.buildOptions);
 }
 

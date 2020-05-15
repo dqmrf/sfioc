@@ -29,7 +29,7 @@ const allowedOptions = [
 function createComponent(target, options = {}) {
   const component = {
     target,
-    [COMPONENT_OPTIONS]: {}
+    [COMPONENT_OPTIONS]: updateOptions(null, options)
   };
 
   Object.defineProperties(component, {
@@ -46,8 +46,6 @@ function createComponent(target, options = {}) {
       writable: false
     }
   });
-
-  updateOptions(component, options);
 
   return H.createBuildOptions(
     component,
@@ -94,19 +92,17 @@ function updateOptions(source, inputOptions, ...args) {
     return Object.assign({}, acc, options || {});
   }, inputOptions || {});
 
-  if (R.isEmpty(newOptions)) return source[COMPONENT_OPTIONS];
-
   t.handle(newOptions, {
     validator: ComponentOptions,
     paramName: COMPONENT_OPTIONS
   });
 
-  Object.assign(
-    source[COMPONENT_OPTIONS],
+  const updatedOptions = Object.assign(
+    (source ? source[COMPONENT_OPTIONS] : {}),
     filterOptions(newOptions)
   );
 
-  return source;
+  return source || updatedOptions;
 }
 
 function filterOptions(options) {
@@ -127,6 +123,6 @@ function partial(fn, ...args) {
 module.exports = {
   createComponent,
   filterOptions,
-  updateComponentOptionsIn: updateOptions,
+  updateRelatedOptions: updateOptions,
   buildOptions: componentBuildOptions
 };
