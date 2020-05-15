@@ -10,8 +10,8 @@ const { Elements, ContainerOptions } = require('./structures');
 const {
   InjectionMode,
   Lifetime,
+  ResolveAs,
   ElementTypes,
-  ComponentTypes,
   COMPONENT_OPTIONS
 } = require('./constants');
 
@@ -19,7 +19,7 @@ const { COMPONENT, GROUP } = ElementTypes;
 
 const defaultOptions = {
   injectionMode: InjectionMode.CLASSIC,
-  type: ComponentTypes.FUNCTION,
+  resolveAs: ResolveAs.FUNCTION,
   lifetime: Lifetime.TRANSIENT,
 }
 

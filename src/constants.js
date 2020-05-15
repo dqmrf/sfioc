@@ -11,7 +11,7 @@ const ElementTypes = {
   GROUP: 'GROUP'
 }
 
-const ComponentTypes = {
+const ResolveAs = {
   FUNCTION: 'FUNCTION',
   CLASS: 'CLASS',
   VALUE: 'VALUE'
@@ -29,7 +29,7 @@ module.exports = {
   REGISTRATION,
   InjectionMode,
   ElementTypes,
-  ComponentTypes,
+  ResolveAs,
   Lifetime,
   COMPONENT_OPTIONS
 }

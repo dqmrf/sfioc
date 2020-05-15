@@ -1,6 +1,6 @@
 const U = require('./utils');
 const t = require('./infra/tcomb');
-const { ComponentTypes, REGISTRATION, COMPONENT_OPTIONS } = require('./constants');
+const { ResolveAs, REGISTRATION, COMPONENT_OPTIONS } = require('./constants');
 
 const targetHandler = t.createHandler({
   description: 'Sfioc.Registration',
@@ -38,14 +38,14 @@ function createRegistration(component, options = {}) {
   function prepareTarget() {
     const { target } = component;
 
-    switch(componentOpts.type) {
-      case ComponentTypes.FUNCTION:
+    switch(componentOpts.resolveAs) {
+      case ResolveAs.FUNCTION:
         targetHandler.handle(target);
         return target;
-      case ComponentTypes.CLASS:
+      case ResolveAs.CLASS:
         targetHandler.handle(target);
         return newClass;
-      case ComponentTypes.VALUE:
+      case ResolveAs.VALUE:
         return () => target;
     }
 

@@ -2,7 +2,7 @@ const { catchError } = require('../utils');
 const { SfiocTypeError } = require('../errors');
 const { createComponent } = require('../component');
 const {
-  ComponentTypes,
+  ResolveAs,
   Lifetime,
   ElementTypes,
   ELEMENT,
@@ -14,7 +14,7 @@ const stubTarget = jest.fn();
 describe('create', () => {
   it('returns a component', () => {
     const options = {
-      type: ComponentTypes.FUNCTION,
+      resolveAs: ResolveAs.FUNCTION,
       lifetime: Lifetime.SINGLETON,
       dependsOn: ['dependency1', 'dependency2']
     }
@@ -28,14 +28,14 @@ describe('create', () => {
 
   it(`removes unnecessary options, thay don't break anything`, () => {
     const options = {
-      type: ComponentTypes.FUNCTION,
+      resolveAs: ResolveAs.FUNCTION,
       lifetime: Lifetime.SINGLETON,
       someShit: 'javascript'
     }
     const component = createComponent(stubTarget, options);
     const componentOpts = component[COMPONENT_OPTIONS];
 
-    expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
+    expect(componentOpts.resolveAs).toEqual(ResolveAs.FUNCTION);
     expect(componentOpts.lifetime).toEqual(Lifetime.SINGLETON);
     expect(componentOpts.someShit).toEqual(undefined);
   });
@@ -57,9 +57,9 @@ describe('create', () => {
     expect(error.message).toContain('228');
   });
 
-  it('throws an SfiocTypeError when the type is unknown', () => {
+  it(`throws an SfiocTypeError when the 'resolveAs' is unknown`, () => {
     const error = catchError(() => {
-      createComponent(stubTarget, { type: '228' });
+      createComponent(stubTarget, { resolveAs: '228' });
     });
 
     expect(error).toBeTruthy();
@@ -74,7 +74,7 @@ describe('builder options', () => {
     const componentOpts = component[COMPONENT_OPTIONS];
 
     expect(componentOpts.lifetime).toEqual(Lifetime.SINGLETON);
-    expect(componentOpts.type).toEqual(ComponentTypes.CLASS);
+    expect(componentOpts.resolveAs).toEqual(ResolveAs.CLASS);
   });
 
   describe('dependsOn', () => {
@@ -124,7 +124,7 @@ describe('builder options', () => {
       const component = createComponent(valueGetter).fn();
       const componentOpts = component[COMPONENT_OPTIONS];
 
-      expect(componentOpts.type).toEqual(ComponentTypes.FUNCTION);
+      expect(componentOpts.resolveAs).toEqual(ResolveAs.FUNCTION);
     });
   });
 
@@ -135,7 +135,7 @@ describe('builder options', () => {
       const component = createComponent(value).value();
       const componentOpts = component[COMPONENT_OPTIONS];
 
-      expect(componentOpts.type).toEqual(ComponentTypes.VALUE);
+      expect(componentOpts.resolveAs).toEqual(ResolveAs.VALUE);
     });
   });
 
@@ -146,7 +146,7 @@ describe('builder options', () => {
       const component = createComponent(TestClass).class();
       const componentOpts = component[COMPONENT_OPTIONS];
 
-      expect(componentOpts.type).toEqual(ComponentTypes.CLASS);
+      expect(componentOpts.resolveAs).toEqual(ResolveAs.CLASS);
     });
   });
 });

@@ -1,6 +1,6 @@
 const R = require('ramda');
 const t = require('../infra/tcomb');
-const { LifetimeEnums, ComponentTypesEnums } = require('./enums');
+const { LifetimeEnums, ResolveAsEnums } = require('./enums');
 const { ElementTypes, ELEMENT, COMPONENT_OPTIONS } = require('../constants');
 
 const Element = t.declare('Component | Group');
@@ -32,7 +32,7 @@ Component.define(t.struct({
 }));
 
 ComponentOptions.define(t.struct({
-  type: t.maybe(ComponentTypesEnums),
+  resolveAs: t.maybe(ResolveAsEnums),
   lifetime: t.maybe(LifetimeEnums),
   dependsOn: t.maybe(t.union([ComponentDependencies, t.Function]))
 }));

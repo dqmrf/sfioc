@@ -3,7 +3,7 @@ const H = require('./helpers');
 const t = require('./infra/tcomb');
 const { ComponentOptions } = require('./structures');
 const {
-  ComponentTypes,
+  ResolveAs,
   Lifetime,
   ElementTypes,
   ELEMENT,
@@ -11,7 +11,7 @@ const {
 } = require('./constants');
 
 const allowedOptions = [
-  'dependsOn', 'type', 'lifetime'
+  'dependsOn', 'resolveAs', 'lifetime'
 ];
 
 /**
@@ -58,22 +58,22 @@ function createComponent(target, options = {}) {
 
 function componentBuildOptions() {
   return {
-    setType,
+    resolveAs,
     setLifetime,
     updateComponentOptions,
     singleton: partial(setLifetime, Lifetime.SINGLETON),
     transient: partial(setLifetime, Lifetime.TRANSIENT),
-    fn: partial(setType, ComponentTypes.FUNCTION),
-    value: partial(setType, ComponentTypes.VALUE),
-    class: partial(setType, ComponentTypes.CLASS)
+    fn: partial(resolveAs, ResolveAs.FUNCTION),
+    value: partial(resolveAs, ResolveAs.VALUE),
+    class: partial(resolveAs, ResolveAs.CLASS)
   }
 
   function setLifetime(value) {
     return updateOptions(this, { lifetime: value });
   }
 
-  function setType(value) {
-    return updateOptions(this, { type: value });
+  function resolveAs(value) {
+    return updateOptions(this, { resolveAs: value });
   }
 
   function updateComponentOptions(...options) {

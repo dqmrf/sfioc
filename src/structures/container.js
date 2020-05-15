@@ -1,11 +1,11 @@
 const t = require('../infra/tcomb');
-const { InjectionModeEnums, ComponentTypesEnums, LifetimeEnums } = require('./enums');
+const { InjectionModeEnums, ResolveAsEnums, LifetimeEnums } = require('./enums');
 
 const ContainerOptions = t.declare('ContainerOptions');
 
 ContainerOptions.define(t.struct({
   injectionMode: InjectionModeEnums,
-  type: t.maybe(ComponentTypesEnums),
+  resolveAs: t.maybe(ResolveAsEnums),
   lifetime: t.maybe(LifetimeEnums)
 }));
 

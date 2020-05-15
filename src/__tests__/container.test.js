@@ -5,7 +5,7 @@ const { createComponent } = require('../component');
 const { SfiocResolutionError, SfiocTypeError } = require('../errors');
 const {
   InjectionMode,
-  ComponentTypes,
+  ResolveAs,
   Lifetime,
   COMPONENT_OPTIONS
 } = require('../constants');
@@ -26,12 +26,12 @@ describe('container', () => {
     let container = createContainer();
 
     const testValueComponent = createComponent(testValue, {
-      type: ComponentTypes.VALUE
+      resolveAs: ResolveAs.VALUE
     });
 
     const getTestValueComponent = createComponent(
       testValueGetterProvider, {
-      type: ComponentTypes.FUNCTION,
+      resolveAs: ResolveAs.FUNCTION,
       dependsOn: ['testValue']
     });
 
@@ -107,14 +107,14 @@ describe('container', () => {
     it('lets me register registrations in multiple calls', () => {
       container.register({
         testValue: createComponent(testValue, {
-          type: ComponentTypes.VALUE
+          resolveAs: ResolveAs.VALUE
         })
       });
 
       container.register({
         getTestValue: createComponent(
           testValueGetterProvider, {
-          type: ComponentTypes.FUNCTION,
+          resolveAs: ResolveAs.FUNCTION,
           dependsOn: ['testValue']
         })
       });
@@ -129,11 +129,11 @@ describe('container', () => {
     it('accepts a single dependency as a string', () => {
       container.register({
         testValue: createComponent(testValue, {
-          type: ComponentTypes.VALUE
+          resolveAs: ResolveAs.VALUE
         }),
         getTestValue: createComponent(
           testValueGetterProvider, {
-          type: ComponentTypes.FUNCTION,
+          resolveAs: ResolveAs.FUNCTION,
           dependsOn: 'testValue'
         })
       });
@@ -164,11 +164,11 @@ describe('container', () => {
 
       container.register({
         app: createComponent(TestApp, {
-          type: ComponentTypes.CLASS,
+          resolveAs: ResolveAs.CLASS,
           dependsOn: ['repo']
         }),
         repo: createComponent(TestRepo, {
-          type: ComponentTypes.CLASS
+          resolveAs: ResolveAs.CLASS
         })
       })
 
@@ -261,11 +261,11 @@ describe('container', () => {
 
         container.register({
           testValue: createComponent(testValue, {
-            type: ComponentTypes.VALUE
+            resolveAs: ResolveAs.VALUE
           }),
           getTestValue: createComponent(
             testValueGetterProvider, {
-            type: ComponentTypes.FUNCTION,
+            resolveAs: ResolveAs.FUNCTION,
             dependsOn: callback
           })
         });
@@ -281,11 +281,11 @@ describe('container', () => {
 
         container.register({
           testValue: createComponent(testValue, {
-            type: ComponentTypes.VALUE
+            resolveAs: ResolveAs.VALUE
           }),
           getTestValue: createComponent(
             testValueGetterProvider, {
-            type: ComponentTypes.FUNCTION,
+            resolveAs: ResolveAs.FUNCTION,
             dependsOn: callback
           })
         });
@@ -299,11 +299,11 @@ describe('container', () => {
       it('resolve dependencies if callback returns a String with a single existing dependency', () => {
         container.register({
           testValue: createComponent(testValue, {
-            type: ComponentTypes.VALUE
+            resolveAs: ResolveAs.VALUE
           }),
           getTestValue: createComponent(
             testValueGetterProvider, {
-            type: ComponentTypes.FUNCTION,
+            resolveAs: ResolveAs.FUNCTION,
             dependsOn: (DP) => (DP.testValue)
           })
         });
@@ -316,11 +316,11 @@ describe('container', () => {
       it('resolve dependencies if callback returns an Array with a single existing dependency', () => {
         container.register({
           testValue: createComponent(testValue, {
-            type: ComponentTypes.VALUE
+            resolveAs: ResolveAs.VALUE
           }),
           getTestValue: createComponent(
             testValueGetterProvider, {
-            type: ComponentTypes.FUNCTION,
+            resolveAs: ResolveAs.FUNCTION,
             dependsOn: (DP) => ([DP.testValue])
           })
         });

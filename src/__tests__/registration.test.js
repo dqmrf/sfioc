@@ -2,14 +2,14 @@ const { catchError } = require('../utils');
 const { SfiocTypeError } = require('../errors');
 const { createRegistration } = require('../registration');
 const { createComponent } = require('../component');
-const { ComponentTypes, Lifetime, REGISTRATION } = require('../constants');
+const { ResolveAs, Lifetime, REGISTRATION } = require('../constants');
 
 const stubTarget = jest.fn();
 
 describe('createRegistration', () => {
   it('returns a registration', () => {
     const options = {
-      type: ComponentTypes.FUNCTION,
+      resolveAs: ResolveAs.FUNCTION,
       lifetime: Lifetime.SINGLETON,
       dependsOn: ['dependency1', 'dependency2']
     }
@@ -47,7 +47,7 @@ describe('createRegistration', () => {
     expect(new registration.target().getValue()).toBe(228);
   });
 
-  it('throws an SfiocTypeError when the component target doesn\'t match its type', () => {
+  it(`throws an SfiocTypeError when the component target doesn\'t match its 'resolveAs' assertion`, () => {
     const component = createComponent('wrongTarget').fn();
     const error = catchError(() => createRegistration(component));
 

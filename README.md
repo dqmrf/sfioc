@@ -121,9 +121,9 @@ container.register({
   showSecretData: sf.component(showSecretData, { dependsOn: 'repo' }).fn(),
   // ... but we can do it in a different way...
   app: sf.component(appFactory, {
-    // ... by specifying the component type in the component options.
+    // ... by specifying through the 'resolveAs' option.
     // This is the same as calling the '.fn()' option on our component
-    type: sf.ComponentTypes.FUNCTION,
+    resolveAs: sf.ResolveAs.FUNCTION,
     dependsOn: ['store', 'login', 'showSecretData']
   })
 });
@@ -143,7 +143,6 @@ app.start(wrongUserId);
 
 ## TODO:
 ### Necessary
-- Come up with other name for 'type' option
 - Fix resolution stack displaying
 
 ### Secondary

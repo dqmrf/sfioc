@@ -5,7 +5,7 @@ const { createComponent } = require('../component');
 const {
   ElementTypes,
   Lifetime,
-  ComponentTypes,
+  ResolveAs,
   ELEMENT,
   COMPONENT_OPTIONS
 } = require('../constants');
@@ -77,10 +77,10 @@ describe('create', () => {
       component2
     }, {
       lifetime: Lifetime.SINGLETON,
-      type: ComponentTypes.FUNCTION
+      resolveAs: ResolveAs.FUNCTION
     });
 
     expect(group[COMPONENT_OPTIONS].lifetime).toEqual(Lifetime.SINGLETON);
-    expect(group[COMPONENT_OPTIONS].type).toEqual(ComponentTypes.FUNCTION);
+    expect(group[COMPONENT_OPTIONS].resolveAs).toEqual(ResolveAs.FUNCTION);
   });
 });
