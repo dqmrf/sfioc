@@ -147,6 +147,5 @@ app.start(wrongUserId);
 ### Secondary
 - Group resolving implementation.
 - Angular-like dependencies.
-- Validator: expand 'struct' structure when t.handler throws an error.
 - Webpack + babel?
-- Clean up* in tests.
+- Validator: expand 'struct' structure when t.handler throws an error.

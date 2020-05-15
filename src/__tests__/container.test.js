@@ -11,8 +11,9 @@ const {
 } = require('../constants');
 
 const testValue = 228;
-const testValueGetterProvider = ({ testValue }) => () => testValue;
+const getTestValue = jest.fn(({ testValue }) => () => testValue);
 const stubTarget = jest.fn();
+const stubComponent = (options) => createComponent(stubTarget, options);
 
 describe('createContainer', () => {
   it('returns an object', () => {
@@ -25,25 +26,20 @@ describe('container', () => {
   it('lets me register components and resolve them', () => {
     let container = createContainer();
 
-    const testValueComponent = createComponent(testValue, {
-      resolveAs: ResolveAs.VALUE
-    });
-
-    const getTestValueComponent = createComponent(
-      testValueGetterProvider, {
-      resolveAs: ResolveAs.FUNCTION,
-      dependsOn: ['testValue']
-    });
-
     container.register({
-      testValue: testValueComponent,
-      getTestValue: getTestValueComponent
+      testValue: createComponent(testValue, {
+        resolveAs: ResolveAs.VALUE
+      }),
+      getTestValue: createComponent(getTestValue, {
+        resolveAs: ResolveAs.FUNCTION,
+        dependsOn: ['testValue']
+      })
     });
 
-    const getTestValue = container.resolve('getTestValue');
+    const rootFactory = container.resolve('getTestValue');
 
-    expect(getTestValue).toBeTruthy();
-    expect(getTestValue()).toBe(testValue);
+    expect(rootFactory).toBeTruthy();
+    expect(rootFactory()).toBe(testValue);
   });
 
 
@@ -86,12 +82,14 @@ describe('container', () => {
       })
     });
 
-    const resolvedApp = container.resolve('app');
-    expect(resolvedApp).toBeTruthy();
-    expect(typeof resolvedApp).toBe('object');
-    expect(resolvedApp).toHaveProperty('run');
+    const rootFactory = container.resolve('app');
 
-    resolvedApp.run();
+    expect(rootFactory).toBeTruthy();
+    expect(typeof rootFactory).toBe('object');
+    expect(rootFactory).toHaveProperty('run');
+
+    rootFactory.run();
+
     expect(store).toStrictEqual({
       loggedIn: true,
       anotherValue: true
@@ -100,6 +98,7 @@ describe('container', () => {
 
   describe('register', () => {
     let container;
+
     beforeEach(() => {
       container = createContainer();
     });
@@ -112,8 +111,7 @@ describe('container', () => {
       });
 
       container.register({
-        getTestValue: createComponent(
-          testValueGetterProvider, {
+        getTestValue: createComponent(getTestValue, {
           resolveAs: ResolveAs.FUNCTION,
           dependsOn: ['testValue']
         })
@@ -121,9 +119,10 @@ describe('container', () => {
 
       expect(Object.keys(container.registrations).length).toBe(2);
 
-      const getTestValue = container.resolve('getTestValue');
-      expect(getTestValue).toBeTruthy();
-      expect(getTestValue()).toBe(testValue);
+      const rootFactory = container.resolve('getTestValue');
+
+      expect(rootFactory).toBeTruthy();
+      expect(rootFactory()).toBe(testValue);
     });
 
     it('accepts a single dependency as a string', () => {
@@ -131,8 +130,7 @@ describe('container', () => {
         testValue: createComponent(testValue, {
           resolveAs: ResolveAs.VALUE
         }),
-        getTestValue: createComponent(
-          testValueGetterProvider, {
+        getTestValue: createComponent(getTestValue, {
           resolveAs: ResolveAs.FUNCTION,
           dependsOn: 'testValue'
         })
@@ -140,9 +138,10 @@ describe('container', () => {
 
       expect(Object.keys(container.registrations).length).toBe(2);
 
-      const getTestValue = container.resolve('getTestValue');
-      expect(getTestValue).toBeTruthy();
-      expect(getTestValue()).toBe(testValue);
+      const rootFactory = container.resolve('getTestValue');
+
+      expect(rootFactory).toBeTruthy();
+      expect(rootFactory()).toBe(testValue);
     });
 
     it('supports classes', () => {
@@ -172,13 +171,13 @@ describe('container', () => {
         })
       })
 
-      const app = container.resolve('app');
-      expect(app.stuff()).toBe('stuff');
+      const rootFactory = container.resolve('app');
+      expect(rootFactory.stuff()).toBe('stuff');
     });
 
     it(`overwrites '${COMPONENT_OPTIONS}' of groups nested components properly`, () => {
-      const component1 = createComponent(stubTarget);
-      const component2 = createComponent(stubTarget).transient();
+      const component1 = stubComponent();
+      const component2 = stubComponent().transient();
 
       const group = createGroup(
         { component1, component2 },
@@ -193,10 +192,10 @@ describe('container', () => {
     });
 
     it(`overwrites '${COMPONENT_OPTIONS}' of groups nested groups with its components properly`, () => {
-      const nestedComponent1 = createComponent(stubTarget).singleton();
-      const nestedComponent2 = createComponent(stubTarget).class();
-      const component1 = createComponent(stubTarget).value();
-      const component2 = createComponent(stubTarget).transient();
+      const nestedComponent1 = stubComponent().singleton();
+      const nestedComponent2 = stubComponent().class();
+      const component1 = stubComponent().value();
+      const component2 = stubComponent().transient();
 
       const nestedGroup = createGroup({
         nestedComponent1,
@@ -222,10 +221,10 @@ describe('container', () => {
     it(`lets global '${COMPONENT_OPTIONS}' overwrite '${COMPONENT_OPTIONS}' of all of it's children properly`, () => {
       container = createContainer({ lifetime: Lifetime.SINGLETON });
 
-      const nestedComponent1 = createComponent(stubTarget).transient();
-      const nestedComponent2 = createComponent(stubTarget);
-      const component1 = createComponent(stubTarget);
-      const component2 = createComponent(stubTarget).transient();
+      const nestedComponent1 = stubComponent().transient();
+      const nestedComponent2 = stubComponent();
+      const component1 = stubComponent();
+      const component2 = stubComponent().transient();
 
       const nestedGroup = createGroup({
         nestedComponent1,
@@ -251,6 +250,7 @@ describe('container', () => {
 
   describe('resolve', () => {
     let container;
+
     beforeEach(() => {
       container = createContainer();
     });
@@ -263,8 +263,7 @@ describe('container', () => {
           testValue: createComponent(testValue, {
             resolveAs: ResolveAs.VALUE
           }),
-          getTestValue: createComponent(
-            testValueGetterProvider, {
+          getTestValue: createComponent(getTestValue, {
             resolveAs: ResolveAs.FUNCTION,
             dependsOn: callback
           })
@@ -283,14 +282,14 @@ describe('container', () => {
           testValue: createComponent(testValue, {
             resolveAs: ResolveAs.VALUE
           }),
-          getTestValue: createComponent(
-            testValueGetterProvider, {
+          getTestValue: createComponent(getTestValue, {
             resolveAs: ResolveAs.FUNCTION,
             dependsOn: callback
           })
         });
 
         container.resolve('getTestValue');
+
         expect(callback).toHaveBeenCalledWith({
           testValue: "testValue"
         });
@@ -301,16 +300,16 @@ describe('container', () => {
           testValue: createComponent(testValue, {
             resolveAs: ResolveAs.VALUE
           }),
-          getTestValue: createComponent(
-            testValueGetterProvider, {
+          getTestValue: createComponent(getTestValue, {
             resolveAs: ResolveAs.FUNCTION,
             dependsOn: (DP) => (DP.testValue)
           })
         });
 
-        const getTestValue = container.resolve('getTestValue');
-        expect(getTestValue).toBeTruthy();
-        expect(getTestValue()).toBe(testValue);
+        const rootFactory = container.resolve('getTestValue');
+
+        expect(rootFactory).toBeTruthy();
+        expect(rootFactory()).toBe(testValue);
       });
 
       it('resolve dependencies if callback returns an Array with a single existing dependency', () => {
@@ -318,22 +317,21 @@ describe('container', () => {
           testValue: createComponent(testValue, {
             resolveAs: ResolveAs.VALUE
           }),
-          getTestValue: createComponent(
-            testValueGetterProvider, {
+          getTestValue: createComponent(getTestValue, {
             resolveAs: ResolveAs.FUNCTION,
             dependsOn: (DP) => ([DP.testValue])
           })
         });
 
-        const getTestValue = container.resolve('getTestValue');
-        expect(getTestValue).toBeTruthy();
-        expect(getTestValue()).toBe(testValue);
+        const rootFactory = container.resolve('getTestValue');
+
+        expect(rootFactory).toBeTruthy();
+        expect(rootFactory()).toBe(testValue);
       });
 
       it('throws an SfiocTypeError if callback returns an Function', () => {
         container.register({
-          getTestValue: createComponent(
-            testValueGetterProvider, {
+          getTestValue: createComponent(getTestValue, {
             dependsOn: () => (() => {})
           })
         });
@@ -363,8 +361,7 @@ describe('container', () => {
 
       it('throws an SfiocTypeError if callback returns an Array with empty values', () => {
         container.register({
-          getTestValue: createComponent(
-            testValueGetterProvider, {
+          getTestValue: createComponent(getTestValue, {
             dependsOn: () => (['', ''])
           })
         });
@@ -427,6 +424,7 @@ describe('container', () => {
 
     describe('lifetime', () => {
       let root, store, acc;
+
       beforeEach(() => {
         root = ({ accumulator, store }) => {
           accumulator.increment();
@@ -482,20 +480,17 @@ describe('container', () => {
     });
 
     it(`lets me resolve dependencies via 'get' proxy`, () => {
-      const testValueComponent = createComponent(testValue).value();
-      const getTestValueComponent = createComponent(testValueGetterProvider, {
-        dependsOn: 'testValue'
-      });
-
       container.register({
-        testValue: testValueComponent,
-        getTestValue: getTestValueComponent
+        testValue: createComponent(testValue).value(),
+        getTestValue: createComponent(getTestValue, {
+          dependsOn: 'testValue'
+        })
       });
 
-      const getTestValue = container.get.getTestValue;
+      const rootFactory = container.get.getTestValue;
 
-      expect(getTestValue).toBeTruthy();
-      expect(getTestValue()).toBe(testValue);
+      expect(rootFactory).toBeTruthy();
+      expect(rootFactory()).toBe(testValue);
     });
 
     describe(`'PROXY' injection mode`, () => {
@@ -506,18 +501,17 @@ describe('container', () => {
       });
 
       it('lets me resolve dependencies via proxy', () => {
-        const testValueComponent = createComponent(testValue).value();
-        const getTestValueComponent = createComponent(testValueGetterProvider);
-
         container.register({
-          testValue: testValueComponent,
-          getTestValue: getTestValueComponent
+          testValue: createComponent(testValue).value(),
+          getTestValue: createComponent(getTestValue, {
+            dependsOn: 'testValue'
+          })
         });
 
-        const getTestValue = container.resolve('getTestValue');
+        const rootFactory = container.resolve('getTestValue');
 
-        expect(getTestValue).toBeTruthy();
-        expect(getTestValue()).toBe(testValue);
+        expect(rootFactory).toBeTruthy();
+        expect(rootFactory()).toBe(testValue);
       });
 
       it('lets me register components with groups and resolve them', () => {
@@ -557,12 +551,14 @@ describe('container', () => {
           })
         });
 
-        const resolvedApp = container.resolve('app');
-        expect(resolvedApp).toBeTruthy();
-        expect(typeof resolvedApp).toBe('object');
-        expect(resolvedApp).toHaveProperty('run');
+        const rootFactory = container.resolve('app');
 
-        resolvedApp.run();
+        expect(rootFactory).toBeTruthy();
+        expect(typeof rootFactory).toBe('object');
+        expect(rootFactory).toHaveProperty('run');
+
+        rootFactory.run();
+
         expect(store).toStrictEqual({
           loggedIn: true,
           anotherValue: true
