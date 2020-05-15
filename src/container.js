@@ -1,21 +1,21 @@
-const R = require('ramda');
-const U = require('./utils');
-const H = require('./helpers');
-const t = require('./infra/tcomb');
-const component = require('./component');
-const { createResolver } = require('./resolver');
-const { SfiocResolutionError } = require('./errors');
-const { createRegistration } = require('./registration');
-const { Elements, ContainerOptions } = require('./structures');
-const {
+import R from 'ramda'
+import t from './infra/tcomb'
+import * as U from './utils'
+import * as H from './helpers'
+import { createResolver } from './resolver'
+import { SfiocResolutionError } from './errors'
+import { createRegistration } from './registration'
+import { Elements, ContainerOptions } from './structures'
+import { filterOptions as extractComponentOptions } from './component'
+import {
   InjectionMode,
   Lifetime,
   ResolveAs,
   ElementTypes,
   COMPONENT_OPTIONS
-} = require('./constants');
+} from './constants'
 
-const { COMPONENT, GROUP } = ElementTypes;
+const { COMPONENT, GROUP } = ElementTypes
 
 const defaultOptions = {
   injectionMode: InjectionMode.CLASSIC,
@@ -29,7 +29,7 @@ const defaultOptions = {
  * @return {object}
  * The container.
  */
-function createContainer(containerOptions = {}) {
+export function createContainer(containerOptions = {}) {
   // Global options for the container.
   containerOptions = t.handle(containerOptions, {
     description: 'Sfioc.createContainer',
@@ -39,16 +39,16 @@ function createContainer(containerOptions = {}) {
   }).value
 
   // Global options for all components.
-  const componentOptions = component.filterOptions(containerOptions);
+  const componentOptions = extractComponentOptions(containerOptions)
 
   // Storage for all registered registrations.
-  const registrations = {};
+  const registrations = {}
 
   // Storage for currently resolved registrations.
-  const resolutionStack = [];
+  const resolutionStack = []
 
   // Storage for resolved dependencies with 'SINGLETON' lifetime.
-  const cache = new Map();
+  const cache = new Map()
 
   // Container itself.
   const container = {
@@ -61,9 +61,9 @@ function createContainer(containerOptions = {}) {
   }
 
   // For resolving the current registration.
-  const resolver = createResolver(container);
+  const resolver = createResolver(container)
 
-  return container;
+  return container
 
   /**
    * Registers input elements.
@@ -79,9 +79,9 @@ function createContainer(containerOptions = {}) {
       validator: Elements,
       description: 'Sfioc.register',
       paramName: 'elements'
-    });
+    })
 
-    return _register(elements);
+    return _register(elements)
   }
 
   /**
@@ -100,20 +100,20 @@ function createContainer(containerOptions = {}) {
    * The container.
    */
   function _register(elements, params = {}) {
-    params = R.mergeRight({ parentGroup: {} }, params);
+    params = R.mergeRight({ parentGroup: {} }, params)
 
-    const elementIds = Object.keys(elements);
-    const { parentGroup } = params;
+    const elementIds = Object.keys(elements)
+    const { parentGroup } = params
 
     for (const elementId of elementIds) {
-      const element = elements[elementId];
-      const elementPath = U.joinRight([parentGroup.id, elementId]);
+      const element = elements[elementId]
+      const elementPath = U.joinRight([parentGroup.id, elementId])
 
       element.updateComponentOptions(
         componentOptions,
         parentGroup[COMPONENT_OPTIONS],
         element[COMPONENT_OPTIONS]
-      );
+      )
 
       switch(H.getElementType(element)) {
         case COMPONENT: {
@@ -121,8 +121,8 @@ function createContainer(containerOptions = {}) {
             element, {
             id: elementId,
             groupId: parentGroup.id
-          });
-          break;
+          })
+          break
         }
         case GROUP: {
           _register(
@@ -131,13 +131,13 @@ function createContainer(containerOptions = {}) {
               ...element,
               id: elementPath
             }
-          });
-          break;
+          })
+          break
         }
       }
     }
 
-    return container;
+    return container
   }
 
   /**
@@ -150,55 +150,55 @@ function createContainer(containerOptions = {}) {
    * Whatever was resolved.
    */
   function resolve(registration) {
-    let currentRegistration = registration;
+    let currentRegistration = registration
 
     if (R.type(registration) === 'String') {
-      currentRegistration = registrations[registration];
+      currentRegistration = registrations[registration]
     }
 
     if (!H.isRegistration(currentRegistration)) {
-      throw new SfiocResolutionError(registration, resolutionStack);
+      throw new SfiocResolutionError(registration, resolutionStack)
     }
 
-    const { path, lifetime } = currentRegistration;
+    const { path, lifetime } = currentRegistration
 
     if (resolutionStack.includes(path)) {
       throw new SfiocResolutionError(
         path,
         resolutionStack,
         `'Cyclic dependencies detected.'`
-      );
+      )
     }
 
-    resolutionStack.push(path);
+    resolutionStack.push(path)
 
-    let resolved, cached;
+    let resolved, cached
     switch (lifetime) {
       case Lifetime.TRANSIENT: {
-        resolved = resolver.resolve(currentRegistration);
-        break;
+        resolved = resolver.resolve(currentRegistration)
+        break
       }
       case Lifetime.SINGLETON: {
-        cached = cache.get(path);
+        cached = cache.get(path)
         if (!cached) {
-          resolved = resolver.resolve(currentRegistration);
-          cache.set(path, resolved);
+          resolved = resolver.resolve(currentRegistration)
+          cache.set(path, resolved)
         } else {
-          resolved = cached;
+          resolved = cached
         }
-        break;
+        break
       }
       default: {
         throw new SfiocResolutionError(
           path,
           resolutionStack,
           `Unknown lifetime "${lifetime}"`
-        );
+        )
       }
     }
 
-    resolutionStack.pop();
-    return resolved;
+    resolutionStack.pop()
+    return resolved
   }
 
   /**
@@ -214,28 +214,24 @@ function createContainer(containerOptions = {}) {
   function proxify(registrations) {
     return new Proxy(registrations, {
       get(target, inputId) {
-        const groupRegistrations = {};
+        const groupRegistrations = {}
 
-        for (registration of Object.values(target)) {
+        for (let registration of Object.values(target)) {
           if (inputId == registration.id) {
-            return resolve(registration);
+            return resolve(registration)
           }
 
           if (inputId == registration.groupId) {
-            groupRegistrations[registration.id] = registration;
+            groupRegistrations[registration.id] = registration
           }
         }
 
         if (!R.isEmpty(groupRegistrations)) {
-          return proxify(groupRegistrations);
+          return proxify(groupRegistrations)
         }
 
-        throw new SfiocResolutionError(inputId, resolutionStack);
+        throw new SfiocResolutionError(inputId, resolutionStack)
       }
-    });
+    })
   }
 }
-
-module.exports = {
-  createContainer
-};

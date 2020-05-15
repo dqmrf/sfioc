@@ -1,7 +1,10 @@
-const t = require('./infra/tcomb');
-const H = require('./helpers');
-const component = require('./component');
-const { ElementTypes, ELEMENT, COMPONENT_OPTIONS } = require('./constants');
+import t from './infra/tcomb'
+import * as H from './helpers'
+import { ElementTypes, ELEMENT, COMPONENT_OPTIONS } from './constants'
+import {
+  buildOptions as componentBuildOptions,
+  updateOptions as updateComponentOptions
+} from './component'
 
 /**
  * Prepares the group of dependencies (or groups) for registration.
@@ -15,15 +18,15 @@ const { ElementTypes, ELEMENT, COMPONENT_OPTIONS } = require('./constants');
  * @return {object}
  * Container 'GROUP' element that can be registered.
  */
-function createGroup(elements, options = {}) {
+export function createGroup(elements, options = {}) {
   const group = {
     elements: t.handle(elements, {
       description: 'Sfioc.createGroup',
       paramName: 'elements',
       validator: t.Object,
     }).value,
-    [COMPONENT_OPTIONS]: component.updateRelatedOptions(null, options)
-  };
+    [COMPONENT_OPTIONS]: updateComponentOptions(null, options)
+  }
 
   Object.defineProperties(group, {
     '_sfType': {
@@ -38,11 +41,7 @@ function createGroup(elements, options = {}) {
       configurable: false,
       writable: false
     }
-  });
+  })
 
-  return H.createBuildOptions(group, component.buildOptions);
+  return H.createBuildOptions(group, componentBuildOptions)
 }
-
-module.exports = {
-  createGroup
-};

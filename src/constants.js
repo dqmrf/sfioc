@@ -1,35 +1,25 @@
-const ELEMENT = 'ELEMENT';
-const REGISTRATION = 'REGISTRATION';
+export const ELEMENT = 'ELEMENT'
+export const REGISTRATION = 'REGISTRATION'
 
-const InjectionMode = {
+export const InjectionMode = {
   CLASSIC: 'CLASSIC',
   PROXY: 'PROXY'
 }
 
-const ElementTypes = {
+export const ElementTypes = {
   COMPONENT: 'COMPONENT',
   GROUP: 'GROUP'
 }
 
-const ResolveAs = {
+export const ResolveAs = {
   FUNCTION: 'FUNCTION',
   CLASS: 'CLASS',
   VALUE: 'VALUE'
 }
 
-const Lifetime = {
+export const Lifetime = {
   TRANSIENT: 'TRANSIENT',
   SINGLETON: 'SINGLETON'
 }
 
-const COMPONENT_OPTIONS = 'componentOptions';
-
-module.exports = {
-  ELEMENT,
-  REGISTRATION,
-  InjectionMode,
-  ElementTypes,
-  ResolveAs,
-  Lifetime,
-  COMPONENT_OPTIONS
-}
+export const COMPONENT_OPTIONS = 'componentOptions'
