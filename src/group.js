@@ -40,7 +40,7 @@ function createGroup(elements, options = {}) {
     }
   });
 
-  component.updateKinOptions(group, options);
+  component.updateComponentOptionsIn(group, options);
   return H.createBuildOptions(group, component.buildOptions);
 }
 

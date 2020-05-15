@@ -60,6 +60,7 @@ function componentBuildOptions() {
   return {
     setType,
     setLifetime,
+    updateComponentOptions,
     singleton: partial(setLifetime, Lifetime.SINGLETON),
     transient: partial(setLifetime, Lifetime.TRANSIENT),
     fn: partial(setType, ComponentTypes.FUNCTION),
@@ -73,6 +74,10 @@ function componentBuildOptions() {
 
   function setType(value) {
     return updateOptions(this, { type: value });
+  }
+
+  function updateComponentOptions(...options) {
+    return updateOptions(this, ...options);
   }
 }
 
@@ -122,6 +127,6 @@ function partial(fn, ...args) {
 module.exports = {
   createComponent,
   filterOptions,
-  updateKinOptions: updateOptions,
+  updateComponentOptionsIn: updateOptions,
   buildOptions: componentBuildOptions
 };

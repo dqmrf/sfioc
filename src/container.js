@@ -109,8 +109,7 @@ function createContainer(containerOptions = {}) {
       const element = elements[elementId];
       const elementPath = U.joinRight([parentGroup.id, elementId]);
 
-      component.updateKinOptions(
-        element,
+      element.updateComponentOptions(
         componentOptions,
         parentGroup[COMPONENT_OPTIONS],
         element[COMPONENT_OPTIONS]

@@ -29,7 +29,7 @@ function createRegistration(component, options = {}) {
     groupId: options.groupId || null,
     target: prepareTarget(),
     lifetime: componentOpts.lifetime,
-    dependencies: componentOpts.dependsOn,
+    dependencies: componentOpts.dependsOn || null,
     get path() {
       return U.joinRight([this.groupId, this.id])
     },

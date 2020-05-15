@@ -143,6 +143,8 @@ app.start(wrongUserId);
 
 ## TODO:
 ### Necessary
+- Come up with other name for 'type' option
+- Fix resolution stack displaying
 
 ### Secondary
 - Group resolving implementation.
