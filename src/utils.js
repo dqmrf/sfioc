@@ -1,5 +1,11 @@
 const R = require('ramda');
 
+function partial(fn, ...args) {
+  return function partiallyApplied() {
+    return fn.apply(this, args);
+  }
+}
+
 function catchError(targetFn, inputOpts = {}) {
   const defaults = { message: null, throwError: false }
   const options = R.mergeRight(defaults, inputOpts);
@@ -28,6 +34,7 @@ function setMainOption(arg, mainOption) {
 }
 
 module.exports = {
+  partial,
   catchError,
   joinRight,
   setMainOption

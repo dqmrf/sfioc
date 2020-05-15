@@ -1,4 +1,4 @@
-const R = require('ramda');
+const U = require('./utils');
 const H = require('./helpers');
 const t = require('./infra/tcomb');
 const { ComponentOptions } = require('./structures');
@@ -59,11 +59,11 @@ function componentBuildOptions() {
     resolveAs,
     setLifetime,
     updateComponentOptions,
-    singleton: partial(setLifetime, Lifetime.SINGLETON),
-    transient: partial(setLifetime, Lifetime.TRANSIENT),
-    fn: partial(resolveAs, ResolveAs.FUNCTION),
-    value: partial(resolveAs, ResolveAs.VALUE),
-    class: partial(resolveAs, ResolveAs.CLASS)
+    singleton: U.partial(setLifetime, Lifetime.SINGLETON),
+    transient: U.partial(setLifetime, Lifetime.TRANSIENT),
+    fn: U.partial(resolveAs, ResolveAs.FUNCTION),
+    value: U.partial(resolveAs, ResolveAs.VALUE),
+    class: U.partial(resolveAs, ResolveAs.CLASS)
   }
 
   function setLifetime(value) {
@@ -112,12 +112,6 @@ function filterOptions(options) {
     result[optionName] = options[optionName];
   }
   return result;
-}
-
-function partial(fn, ...args) {
-  return function partiallyApplied() {
-    return fn.apply(this, args);
-  }
 }
 
 module.exports = {
