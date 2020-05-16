@@ -97,10 +97,176 @@ describe('container', () => {
   })
 
   describe('register', () => {
-    let container
+    let container, expContainer
 
     beforeEach(() => {
       container = createContainer()
+    })
+
+    describe('input parameters', () => {
+      let component1, component2, component3, component4
+
+      beforeEach(() => {
+        container = createContainer()
+        expContainer = createContainer()
+
+        component1 = createComponent(42)
+                      .value()
+                      .singleton()
+                      .dependsOn(['c1d1', 'c1d2'])
+                      .singleton()
+        component2 = createComponent(() => 42)
+                      .fn()
+                      .dependsOn('c2d1')
+        component3 = createComponent(class C3 {})
+                      .class()
+                      .dependsOn(['c3d1', 'c3d2'])
+        component4 = createComponent(() => 255)
+                      .fn()
+                      .dependsOn('c4d1')
+                      .singleton()
+      })
+
+      it(`may be a 'Sfioc.group' element as the first arg`, () => {
+        const group = createGroup({ component1, component2 })
+
+        expContainer.register({ component1, component2 })
+
+        container.register(group)
+      })
+
+      it(`may be a 'String' as the first arg, 'Component' as the second arg`, () => {
+        expContainer.register({ component1, component2 })
+
+        container.register('component1', component1)
+        container.register('component2', component2)
+      })
+
+      it(`may be an 'Array<[String, Element]>' as the first arg`, () => {
+        expContainer.register({ component1, component2 })
+
+        container.register([
+          'component1', component1,
+          'component2', component2
+        ])
+      })
+
+      it(`may be an 'Array<Group>' as the first arg`, () => {
+        const group1 = createGroup({ component1, component2 })
+        const group2 = createGroup({ component3, component4 })
+
+        expContainer.register({
+          component1,
+          component2,
+          component3,
+          component4
+        })
+
+        container.register([group1, group2])
+      })
+
+      it(`may be an 'Array<Elements>' as the first arg`, () => {
+        expContainer.register({
+          component1,
+          component2,
+          component3,
+          component4
+        })
+
+        container.register([
+          { component1, component2 },
+          { component3 },
+          { component4 }
+        ])
+      })
+
+      it(`may be an 'Array<Group | Elements>' as the first arg`, () => {
+        const group = createGroup({ component1, component2 })
+
+        expContainer.register({
+          component1,
+          component2,
+          component3,
+          component4
+        })
+
+        container.register([
+          group,
+          { component3 },
+          { component4 }
+        ])
+      })
+
+      afterEach(() => {
+        const registrations = container.registrations
+        const expRegistrations = expContainer.registrations
+
+        for (let id in registrations) {
+          const registration = registrations[id]
+          const expRegistration = expRegistrations[id]
+
+          expect(registration.id).toEqual(expRegistration.id)
+          expect(registration.groupId).toEqual(expRegistration.groupId)
+          expect(registration.lifetime).toEqual(expRegistration.lifetime)
+          expect(registration.dependencies).toEqual(expRegistration.dependencies)
+        }
+      })
+    })
+
+    it('throws a SfiocTypeError when invalid first argument (Number) was passed', () => {
+      const error = catchError(() => container.register(1))
+
+      expect(error).toBeInstanceOf(SfiocTypeError)
+      expect(error.message).toContain('Number')
+    })
+
+    it('throws a SfiocTypeError when invalid first argument (empty String) was passed', () => {
+      const error = catchError(() => container.register(''))
+
+      expect(error).toBeInstanceOf(SfiocTypeError)
+      expect(error.message).toContain('String')
+    })
+
+    it('throws a SfiocTypeError when invalid first argument (empty Array) was passed', () => {
+      const error = catchError(() => container.register([]))
+
+      expect(error).toBeInstanceOf(SfiocTypeError)
+      expect(error.message).toContain('String')
+    })
+
+    it('throws a SfiocTypeError when invalid first argument (Array<[String, Number]>) was passed', () => {
+      const error = catchError(() => container.register(['dep1', 228]))
+
+      expect(error).toBeInstanceOf(SfiocTypeError)
+      expect(error.message).toContain('228')
+    })
+
+    it('throws a SfiocTypeError when invalid first argument (Array<[String, Empty object]>) was passed', () => {
+      const error = catchError(() => container.register(['dep1', {}]))
+
+      expect(error).toBeInstanceOf(SfiocTypeError)
+      expect(error.message).toContain('[object Object]')
+    })
+
+    it('throws a SfiocTypeError when invalid first argument (Array<[Number]>) was passed', () => {
+      const error = catchError(() => container.register([42]))
+
+      expect(error).toBeInstanceOf(SfiocTypeError)
+      expect(error.message).toContain('42')
+    })
+
+    it('throws a SfiocTypeError when invalid first argument (Array<[String]>) was passed', () => {
+      const error = catchError(() => container.register(['idWithoutValue']))
+
+      expect(error).toBeInstanceOf(SfiocTypeError)
+      expect(error.message).toContain('undefined')
+    })
+
+    it('throws a SfiocTypeError when invalid first argument (Array<[Invalid object]>) was passed', () => {
+      const error = catchError(() => container.register([{ lol: { q: '42' } }]))
+
+      expect(error).toBeInstanceOf(SfiocTypeError)
+      expect(error.message).toContain('[object Object]')
     })
 
     it('lets me register registrations in multiple calls', () => {
@@ -329,7 +495,7 @@ describe('container', () => {
         expect(rootFactory()).toBe(testValue)
       })
 
-      it('throws an SfiocTypeError if callback returns an Function', () => {
+      it('throws a SfiocTypeError if callback returns an Function', () => {
         container.register({
           getTestValue: createComponent(getTestValue, {
             dependsOn: () => (() => {})
@@ -359,7 +525,7 @@ describe('container', () => {
         expect(callback.mock.calls).toContainEqual([])
       })
 
-      it('throws an SfiocTypeError if callback returns an Array with empty values', () => {
+      it('throws a SfiocTypeError if callback returns an Array with empty values', () => {
         container.register({
           getTestValue: createComponent(getTestValue, {
             dependsOn: () => (['', ''])
@@ -375,7 +541,7 @@ describe('container', () => {
       })
     })
 
-    it('throws an SfiocResolutionError when there are unregistered dependencies', () => {
+    it('throws a SfiocResolutionError when there are unregistered dependencies', () => {
       const error = catchError(() => {
         container.resolve('nope')
       })
@@ -384,7 +550,7 @@ describe('container', () => {
       expect(error.message).toMatch(/nope/i)
     })
 
-    it('throws an SfiocResolutionError with a resolution path when resolving an unregistered dependency', () => {
+    it('throws a SfiocResolutionError with a resolution path when resolving an unregistered dependency', () => {
       const first = ({ second }) => second
       const second = ({ third }) => third
       const third = ({ unregistered }) => unregistered
@@ -403,7 +569,7 @@ describe('container', () => {
       expect(error.message).toContain('first -> second -> third')
     })
 
-    it('throws an SfiocResolutionError when there are cyclic dependencies', () => {
+    it('throws a SfiocResolutionError when there are cyclic dependencies', () => {
       const first = ({ second }) => second
       const second = ({ third }) => third
       const third = ({ second }) => second

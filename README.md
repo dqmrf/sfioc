@@ -143,9 +143,10 @@ app.start(wrongUserId);
 
 ## TODO:
 ### Necessary
+- Add options to register method
 
 ### Secondary
+- Autoresolving.
 - Group resolving implementation.
 - Angular-like dependencies.
-- Webpack + babel?
 - Validator: expand 'struct' structure when t.handler throws an error.

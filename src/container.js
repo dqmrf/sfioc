@@ -3,9 +3,9 @@ import t from './infra/tcomb'
 import * as U from './utils'
 import * as H from './helpers'
 import { createResolver } from './resolver'
-import { SfiocResolutionError } from './errors'
 import { createRegistration } from './registration'
-import { Elements, ContainerOptions } from './structures'
+import { SfiocResolutionError, SfiocTypeError } from './errors'
+import { Elements, Element, ContainerOptions, Group } from './structures'
 import { filterOptions as extractComponentOptions } from './component'
 import {
   InjectionMode,
@@ -68,20 +68,59 @@ export function createContainer(containerOptions = {}) {
   /**
    * Registers input elements.
    *
-   * @param {object} elements
-   * Object with container elements.
-   *
    * @return {object}
    * The container.
    */
-  function register(elements) {
-    t.handle(elements, {
-      validator: Elements,
+  function register(...args) {
+    const [firstArg, secondArg] = args
+
+    const handler = t.createHandler({
       description: 'Sfioc.register',
-      paramName: 'elements'
+      paramName: '<1st argument>'
     })
 
-    return _register(elements)
+    const firstArgErr = new SfiocTypeError(
+      'Sfioc.register',
+      '<1st argument>',
+      'String | Object | Array | Sfioc.group',
+      `'${firstArg}' <${R.type(firstArg)}>`
+    )
+
+    if (R.isEmpty(firstArg)) throw firstArgErr;
+
+    if (H.isGroup(firstArg)) {
+      handler.handle(firstArg, { validator: Group })
+      return _register(firstArg.elements)
+    }
+
+    switch (R.type(firstArg)) {
+      case 'Object': {
+        handler.handle(firstArg, { validator: Elements })
+        return _register(firstArg)
+      }
+      case 'String': {
+        handler.handle(secondArg, {
+          validator: Element,
+          paramName: '<2nd argument>'
+        })
+
+        return _register({ [firstArg]: secondArg })
+      }
+      case 'Array': {
+        const subArgs = firstArg
+
+        if (R.type(subArgs[0]) === 'String') {
+          for (let i = 0; i < subArgs.length; i+=2) {
+            register(subArgs[i], subArgs[i+1])
+          }
+        } else {
+          subArgs.forEach(subarg => register(subarg))
+        }
+
+        return container
+      }
+      default: throw firstArgErr;
+    }
   }
 
   /**
