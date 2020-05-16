@@ -22,4 +22,11 @@ export const Lifetime = {
   SINGLETON: 'SINGLETON'
 }
 
+export const ParamNames = [
+  '<1st argument>',
+  '<2nd argument>',
+  '<3rd argument>',
+  '<4th argument>'
+]
+
 export const COMPONENT_OPTIONS = 'componentOptions'

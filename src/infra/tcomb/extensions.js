@@ -24,12 +24,12 @@ module.exports = {
     const defaultOpts = {
       defaults: null,
       validator: null,
+      throwError: true,
+      pathSeparator: '.',
       message: null,
       description: '',
       paramName: '',
-      expected: null,
-      throwError: true,
-      pathSeparator: '.',
+      expected: null
     }
 
     const options = R.mergeRight(defaultOpts, inputOpts)
@@ -52,7 +52,7 @@ module.exports = {
     let result = this.validate(param, validator)
     if (!result.isValid()) {
       const errorMsg = handleError(result)
-      if (options.throwError) throw new SfiocTypeError(errorMsg)
+      if (options.throwError) throw new SfiocTypeError({ message: errorMsg })
       return {
         isValid: false,
         error: { message: errorMsg },
@@ -76,12 +76,8 @@ module.exports = {
         expected
       } = options
 
-      if (message) {
-        return description ? (`${description}: ` + message) : message
-      }
-
       const error = errResult.firstError()
-      let paramPath, expectedValue, givenValue
+      let paramPath, expectedValue
 
       try {
         const { path } = error
@@ -90,18 +86,19 @@ module.exports = {
         paramPath = (paramName ? `[${paramName}]` : '') +
                     ((paramName && !!valuePath.length) ? pathSeparator : '') +
                     valuePath
+
         expectedValue = expected || error.expected.displayName || validator.displayName
-        givenValue = error.actual
       } catch(e) {
         return error.message
       }
 
-      return SfiocTypeError.generateMessage(
+      return SfiocTypeError.generateMessage({
+        message,
         description,
-        paramPath,
-        expectedValue,
-        givenValue
-      )
+        paramName: paramPath,
+        expected: expectedValue,
+        given: error.actual
+      })
     }
   }
 }

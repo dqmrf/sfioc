@@ -4,7 +4,7 @@ import * as U from './utils'
 import * as H from './helpers'
 import { createResolver } from './resolver'
 import { createRegistration } from './registration'
-import { SfiocResolutionError, SfiocTypeError } from './errors'
+import { SfiocResolutionError, SfiocTypeError, SfiocError } from './errors'
 import { Elements, Element, ContainerOptions, Group } from './structures'
 import { filterOptions as extractComponentOptions } from './component'
 import {
@@ -12,7 +12,8 @@ import {
   Lifetime,
   ResolveAs,
   ElementTypes,
-  COMPONENT_OPTIONS
+  COMPONENT_OPTIONS,
+  ParamNames
 } from './constants'
 
 const { COMPONENT, GROUP } = ElementTypes
@@ -73,35 +74,37 @@ export function createContainer(containerOptions = {}) {
    */
   function register(...args) {
     const [firstArg, secondArg] = args
-
-    const handler = t.createHandler({
-      description: 'Sfioc.register',
-      paramName: '<1st argument>'
+    const fnName = 'Sfioc.register'
+    const handler = t.createHandler({ description: fnName })
+    const mainArgErr = new SfiocTypeError({
+      description: fnName,
+      paramName: ParamNames[0],
+      expected: 'String | Object | Sfioc.group | Array',
+      given: `'${firstArg}' <${R.type(firstArg)}>`
     })
 
-    const firstArgErr = new SfiocTypeError(
-      'Sfioc.register',
-      '<1st argument>',
-      'String | Object | Array | Sfioc.group',
-      `'${firstArg}' <${R.type(firstArg)}>`
-    )
-
-    if (R.isEmpty(firstArg)) throw firstArgErr;
+    if (R.isEmpty(firstArg)) throw mainArgErr;
 
     if (H.isGroup(firstArg)) {
-      handler.handle(firstArg, { validator: Group })
+      handler.handle(firstArg, {
+        validator: Group,
+        paramName: ParamNames[0]
+      })
       return _register(firstArg.elements)
     }
 
     switch (R.type(firstArg)) {
       case 'Object': {
-        handler.handle(firstArg, { validator: Elements })
+        handler.handle(firstArg, {
+          validator: Elements,
+          paramName: ParamNames[0]
+        })
         return _register(firstArg)
       }
       case 'String': {
         handler.handle(secondArg, {
           validator: Element,
-          paramName: '<2nd argument>'
+          paramName: ParamNames[1]
         })
 
         return _register({ [firstArg]: secondArg })
@@ -119,7 +122,7 @@ export function createContainer(containerOptions = {}) {
 
         return container
       }
-      default: throw firstArgErr;
+      default: throw mainArgErr;
     }
   }
 

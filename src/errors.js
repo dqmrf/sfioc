@@ -21,42 +21,35 @@ export class ExtendableError extends Error {
 export class SfiocError extends ExtendableError {}
 
 export class SfiocTypeError extends SfiocError {
-  // Params are present for ease of use.
-  constructor(description, paramName, expectedType, givenType) {
-    super(SfiocTypeError.generateMessage(...arguments))
+  constructor(params = {}) {
+    super(SfiocTypeError.generateMessage(params))
   }
 
-  static generateMessage(description, paramName, expectedType, givenType) {
-    let message = ''
+  static generateMessage(params = {}) {
+    const {
+      message,
+      complement,
+      description,
+      paramName,
+      expected,
+      given
+    } = params
 
-    // If the second argument is missing display only the first argument.
-    if (description && paramName) {
-      message += `${description}: `
-    } else if (description && !paramName) {
-      return description
-    }
+    let result = ''
 
-    message += `Invalid value "${givenType}" supplied to: "${paramName}".`
-    message += ` Expected: (${expectedType})`
-    return message
+    if (message) return message;
+    if (description) result += `${description}: `
+    result += `Invalid value (${given}) supplied`
+    result += (paramName ? ` to (${paramName})` : '') + '.'
+    if (expected) result += ` Expected: (${expected}).`
+    if (complement) result += EOL + complement
+
+    return result
   }
 
-  static assert(
-    condition,
-    description,
-    paramName,
-    expectedType,
-    givenType
-  ) {
-    if (!condition) {
-      throw new SfiocTypeError(
-        description,
-        paramName,
-        expectedType,
-        givenType
-      )
-    }
-    return condition
+  static assert(condition, params) {
+    if (condition) return condition
+    throw new SfiocTypeError(params)
   }
 }
 
