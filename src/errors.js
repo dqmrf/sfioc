@@ -39,8 +39,8 @@ export class SfiocTypeError extends SfiocError {
 
     if (message) return message;
     if (description) result += `${description}: `
-    result += `Invalid value (${given}) supplied`
-    result += (paramName ? ` to (${paramName})` : '') + '.'
+    result += `Invalid value "${given}" supplied`
+    result += (paramName ? ` to ${paramName}` : '') + '.'
     if (expected) result += ` Expected: (${expected}).`
     if (complement) result += EOL + complement
 

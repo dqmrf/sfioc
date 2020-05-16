@@ -143,7 +143,7 @@ app.start(wrongUserId);
 
 ## TODO:
 ### Necessary
-- Add options to register method
+- leave resolveAs property in registration
 
 ### Secondary
 - Autoresolving.

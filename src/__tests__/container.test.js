@@ -213,11 +213,49 @@ describe('container', () => {
       })
     })
 
+    describe('input options', () => {
+      let component1, component2, component3, component4
+
+      beforeEach(() => {
+        component1 = stubComponent().value()
+        component2 = stubComponent().transient()
+        component3 = stubComponent().singleton()
+        component4 = stubComponent()
+      })
+
+      it('are valid when passed as the second argument', () => {
+        const group = createGroup({ component3, component4 }).transient()
+
+        container.register({
+          component1, component2, group
+        }, {
+          lifetime: Lifetime.SINGLETON
+        })
+      })
+
+      it('are valid when passed as the third argument with String as first argument', () => {
+        const group = createGroup({ component3, component4 }).transient()
+
+        container.register('component1', component1, { lifetime: Lifetime.SINGLETON})
+        container.register('component2', component2, { lifetime: Lifetime.SINGLETON})
+        container.register('group', group, { lifetime: Lifetime.SINGLETON})
+      })
+
+      afterEach(() => {
+        const { registrations } = container
+
+        expect(registrations.component1.lifetime).toBe(Lifetime.SINGLETON)
+        expect(registrations.component2.lifetime).toBe(Lifetime.TRANSIENT)
+        expect(registrations['group.component3'].lifetime).toBe(Lifetime.SINGLETON)
+        expect(registrations['group.component4'].lifetime).toBe(Lifetime.TRANSIENT)
+      })
+    })
+
     it('throws a SfiocTypeError when invalid first argument (Number) was passed', () => {
-      const error = catchError(() => container.register(1))
+      const error = catchError(() => container.register(42))
 
       expect(error).toBeInstanceOf(SfiocTypeError)
-      expect(error.message).toContain('Number')
+      expect(error.message).toContain('42')
     })
 
     it('throws a SfiocTypeError when invalid first argument (empty String) was passed', () => {

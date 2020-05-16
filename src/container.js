@@ -4,7 +4,7 @@ import * as U from './utils'
 import * as H from './helpers'
 import { createResolver } from './resolver'
 import { createRegistration } from './registration'
-import { SfiocResolutionError, SfiocTypeError, SfiocError } from './errors'
+import { SfiocResolutionError, SfiocTypeError } from './errors'
 import { Elements, Element, ContainerOptions, Group } from './structures'
 import { filterOptions as extractComponentOptions } from './component'
 import {
@@ -73,14 +73,17 @@ export function createContainer(containerOptions = {}) {
    * The container.
    */
   function register(...args) {
-    const [firstArg, secondArg] = args
+    const [firstArg, secondArg, thirdArg] = args
     const fnName = 'Sfioc.register'
     const handler = t.createHandler({ description: fnName })
+    const options = R.is(String, firstArg) ? thirdArg : secondArg
+    const params = { [COMPONENT_OPTIONS]: options }
+
     const mainArgErr = new SfiocTypeError({
       description: fnName,
-      paramName: ParamNames[0],
-      expected: 'String | Object | Sfioc.group | Array',
-      given: `'${firstArg}' <${R.type(firstArg)}>`
+      paramName: ParamNames.all,
+      given: firstArg,
+      expected: 'Sfioc.group | (String, Sfioc.component) | Object | Array'
     })
 
     if (R.isEmpty(firstArg)) throw mainArgErr;
@@ -88,36 +91,35 @@ export function createContainer(containerOptions = {}) {
     if (H.isGroup(firstArg)) {
       handler.handle(firstArg, {
         validator: Group,
-        paramName: ParamNames[0]
+        paramName: ParamNames.first
       })
-      return _register(firstArg.elements)
+      return _register(firstArg.elements, params)
     }
 
     switch (R.type(firstArg)) {
       case 'Object': {
         handler.handle(firstArg, {
           validator: Elements,
-          paramName: ParamNames[0]
+          paramName: ParamNames.first
         })
-        return _register(firstArg)
+        return _register(firstArg, params)
       }
       case 'String': {
         handler.handle(secondArg, {
           validator: Element,
-          paramName: ParamNames[1]
+          paramName: ParamNames.second
         })
-
-        return _register({ [firstArg]: secondArg })
+        return _register({ [firstArg]: secondArg }, params)
       }
       case 'Array': {
         const subArgs = firstArg
 
         if (R.type(subArgs[0]) === 'String') {
           for (let i = 0; i < subArgs.length; i+=2) {
-            register(subArgs[i], subArgs[i+1])
+            register(subArgs[i], subArgs[i+1], options)
           }
         } else {
-          subArgs.forEach(subarg => register(subarg))
+          subArgs.forEach(subarg => register(subarg, options))
         }
 
         return container
@@ -135,8 +137,8 @@ export function createContainer(containerOptions = {}) {
    * @param {object} elements
    * Object with container elements.
    *
-   * @param {object} options
-   * Options for internal recursive calls.
+   * @param {object} params
+   * Params for internal recursive calls.
    *
    * @return {object}
    * The container.
@@ -151,10 +153,12 @@ export function createContainer(containerOptions = {}) {
       const element = elements[elementId]
       const elementPath = U.joinRight([parentGroup.id, elementId])
 
+      // Here options are overwritten from right to left.
       element.updateComponentOptions(
-        componentOptions,
-        parentGroup[COMPONENT_OPTIONS],
-        element[COMPONENT_OPTIONS]
+        componentOptions, // global container's options.
+        params[COMPONENT_OPTIONS], // options that are given from the 'register' method.
+        parentGroup[COMPONENT_OPTIONS], // options from the parent group.
+        element[COMPONENT_OPTIONS] // element's own options.
       )
 
       switch(H.getElementType(element)) {
