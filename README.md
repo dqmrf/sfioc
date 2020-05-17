@@ -1,5 +1,5 @@
 # Sfioc
-Dependency injection library. Inspired by [awilix](http://github.com/jeffijoe/awilix).
+Inversion of Control container for Node.JS. Inspired by [awilix](http://github.com/jeffijoe/awilix).
 
 
 # Usage
@@ -232,7 +232,8 @@ further registration.
 
 # Groups
 In addition to components you also have the ability to use groups. It's used
-to combine components, specify common parameters or/and namespace for them.
+to combine components and other groups, specify common parameters or/and namespace
+for them.
 
 Imagine that you have some modules that can be assigned to the same group.
 For example: operations.
@@ -325,6 +326,8 @@ container.registrations['operations.getUser'].lifetime // TRANSIENT
 container.registrations['operations.sendGreetToUser'].lifetime // SINGLETON
 ```
 
+You can register other groups within group as well.
+
 
 # API
 
@@ -352,8 +355,8 @@ Args:
     - `PROXY`: Injects a proxy object in module that is able to resolve its
       dependencies.
   - `options.componentOptions`: Global options for all components. They can be
-    overwrited by `container.register`, `sfioc.group` and  `sfioc.component`
-    methods.
+      overwrited by `container.register`, `sfioc.group` and  `sfioc.component`
+      methods.
 
 ## `component`
 
@@ -368,18 +371,18 @@ Args:
   - `options.lifetime`: sets the target's lifetime. Valid params: `Lifetime.SINGLETON`,
   `Lifetime.TRANSIENT`.
   - `options.dependsOn`: sets the component dependencies. Accepts the string with
-  dependency name, or array with dependency names. `dependsOn` also accepts a
-  callback that must return the dependency name, or an array of dependency names.
-  Sfioc injects selectors with the names of registered modules in this callback.
-  So if you registered, for example `first` and `second` modules, you can specify
-  a dependency on them in this way:
-  ```js
-  component(third).dependsOn((DP) => ([DP.first, DP.second]))
-  // is the same as:
-  component(third).dependsOn('first', 'second')
-  ```
-  **Note**: use this option only when the `CLASSIC` injection mode is selected.
-  Otherwise this options is useless.
+    dependency name, or array with dependency names. `dependsOn` also accepts a
+    callback that must return the dependency name, or an array of dependency names.
+    Sfioc injects selectors with the names of registered modules in this callback.
+    So if you registered, for example `first` and `second` modules, you can specify
+    a dependency on them in this way:
+    ```js
+    component(third).dependsOn((DP) => ([DP.first, DP.second]))
+    // is the same as:
+    component(third).dependsOn('first', 'second')
+    ```
+    **Note**: use this option only when the `CLASSIC` injection mode is selected.
+    Otherwise this options is useless.
 
 
 The returned component has the following chainable API:
@@ -478,7 +481,7 @@ Registers modules or/and groups in the container.
 There are multiple syntaxes for this function, you can pick the one you like
 the most, or combine them.
 
-`register` method also accepts options for nested components and group as the
+The `register` method also accepts options for nested components and group as the
 last possible argument.
 
 ```js
@@ -486,7 +489,11 @@ last possible argument.
 container.register(
   'someOperationName',
   component(someOperationFactory),
-  { /* options */ }
+  // I don't quite understand why you need to do this, but it's also possible:
+  {
+    lifetime: Lifetime.SINGLETON,
+    resolveAs: ResolveAs.FUNCTION
+  }
 )
 
 // Register single group
