@@ -131,7 +131,6 @@ describe('container', () => {
         const group = createGroup({ component1, component2 })
 
         expContainer.register({ component1, component2 })
-
         container.register(group)
       })
 
@@ -142,6 +141,38 @@ describe('container', () => {
         container.register('component2', component2)
       })
 
+      it(`may be a 'String' as the first arg, 'Group' as the second arg`, () => {
+        expContainer.register({
+          namespace: createGroup({ component1, component2 })
+        })
+
+        container.register('namespace', createGroup({ component1, component2 }))
+      })
+
+      it(`may be a 'String' as the first arg, 'Elements' as the second arg`, () => {
+        expContainer.register({
+          namespace: createGroup({ component1, component2 })
+        })
+
+        container.register('namespace', { component1, component2 })
+      })
+
+      it(`may be a 'String' as the first arg, 'Array<Group>' as the second arg`, () => {
+        const group1 = createGroup({ component1, component2 })
+        const group2 = createGroup({ component3, component4 })
+
+        container.register('namespace', [group1, group2])
+
+        expContainer.register({
+          namespace: createGroup({
+            component1,
+            component2,
+            component3,
+            component4
+          })
+        })
+      })
+
       it(`may be an 'Array<[String, Element]>' as the first arg`, () => {
         expContainer.register({ component1, component2 })
 
@@ -149,20 +180,6 @@ describe('container', () => {
           'component1', component1,
           'component2', component2
         ])
-      })
-
-      it(`may be an 'Array<Group>' as the first arg`, () => {
-        const group1 = createGroup({ component1, component2 })
-        const group2 = createGroup({ component3, component4 })
-
-        expContainer.register({
-          component1,
-          component2,
-          component3,
-          component4
-        })
-
-        container.register([group1, group2])
       })
 
       it(`may be an 'Array<Elements>' as the first arg`, () => {
@@ -262,14 +279,14 @@ describe('container', () => {
       const error = catchError(() => container.register(''))
 
       expect(error).toBeInstanceOf(SfiocTypeError)
-      expect(error.message).toContain('String')
+      expect(error.message).toContain('\"\"')
     })
 
     it('throws a SfiocTypeError when invalid first argument (empty Array) was passed', () => {
       const error = catchError(() => container.register([]))
 
       expect(error).toBeInstanceOf(SfiocTypeError)
-      expect(error.message).toContain('String')
+      expect(error.message).toContain('\"\"')
     })
 
     it('throws a SfiocTypeError when invalid first argument (Array<[String, Number]>) was passed', () => {
@@ -277,13 +294,6 @@ describe('container', () => {
 
       expect(error).toBeInstanceOf(SfiocTypeError)
       expect(error.message).toContain('228')
-    })
-
-    it('throws a SfiocTypeError when invalid first argument (Array<[String, Empty object]>) was passed', () => {
-      const error = catchError(() => container.register(['dep1', {}]))
-
-      expect(error).toBeInstanceOf(SfiocTypeError)
-      expect(error.message).toContain('[object Object]')
     })
 
     it('throws a SfiocTypeError when invalid first argument (Array<[Number]>) was passed', () => {

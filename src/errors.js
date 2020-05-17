@@ -37,7 +37,7 @@ export class SfiocTypeError extends SfiocError {
 
     let result = ''
 
-    if (message) return message;
+    if (message) return message
     if (description) result += `${description}: `
     result += `Invalid value "${given}" supplied`
     result += (paramName ? ` to ${paramName}` : '') + '.'

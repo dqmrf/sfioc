@@ -2,6 +2,7 @@ import R from 'ramda'
 import t from './infra/tcomb'
 import * as U from './utils'
 import * as H from './helpers'
+import { createGroup } from './group'
 import { createResolver } from './resolver'
 import { createRegistration } from './registration'
 import { SfiocResolutionError, SfiocTypeError } from './errors'
@@ -79,20 +80,14 @@ export function createContainer(containerOptions = {}) {
     const options = R.is(String, firstArg) ? thirdArg : secondArg
     const params = { [COMPONENT_OPTIONS]: options }
 
-    const mainArgErr = new SfiocTypeError({
-      description: fnName,
-      paramName: ParamNames.all,
-      given: firstArg,
-      expected: 'Sfioc.group | (String, Sfioc.component) | Object | Array'
-    })
-
-    if (R.isEmpty(firstArg)) throw mainArgErr;
+    if (R.isEmpty(firstArg)) throw argsError(firstArg)
 
     if (H.isGroup(firstArg)) {
       handler.handle(firstArg, {
         validator: Group,
         paramName: ParamNames.first
       })
+
       return _register(firstArg.elements, params)
     }
 
@@ -102,29 +97,53 @@ export function createContainer(containerOptions = {}) {
           validator: Elements,
           paramName: ParamNames.first
         })
+
         return _register(firstArg, params)
       }
       case 'String': {
-        handler.handle(secondArg, {
-          validator: Element,
-          paramName: ParamNames.second
-        })
-        return _register({ [firstArg]: secondArg }, params)
+        if (H.isElement(secondArg)) {
+          handler.handle(secondArg, {
+            validator: Element,
+            paramName: ParamNames.second
+          })
+
+          return _register({ [firstArg]: secondArg }, params)
+        }
+
+        switch (R.type(secondArg)) {
+          case 'Object': {
+            return register(firstArg, createGroup(secondArg), options)
+          }
+          case 'Array': {
+            secondArg.forEach(subarg => register(firstArg, subarg, options))
+            return container
+          }
+        }
+
+        break
       }
       case 'Array': {
-        const subArgs = firstArg
-
-        if (R.type(subArgs[0]) === 'String') {
-          for (let i = 0; i < subArgs.length; i+=2) {
-            register(subArgs[i], subArgs[i+1], options)
+        if (R.type(firstArg[0]) === 'String') {
+          for (let i = 0; i < firstArg.length; i+=2) {
+            register(firstArg[i], firstArg[i+1], options)
           }
         } else {
-          subArgs.forEach(subarg => register(subarg, options))
+          firstArg.forEach(subarg => register(subarg, options))
         }
 
         return container
       }
-      default: throw mainArgErr;
+    }
+
+    throw argsError(`'${firstArg}', '${secondArg}'`)
+
+    function argsError(args) {
+      return new SfiocTypeError({
+        description: fnName,
+        paramName: ParamNames.all,
+        given: args,
+        expected: '(object) | (array) | (string, object | array)'
+      })
     }
   }
 
