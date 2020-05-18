@@ -3,11 +3,12 @@ Inversion of Control container for Node.JS. Inspired by [awilix](http://github.c
 
 
 # Usage
-The main idea is that you need to create container, register your dependencies
-in it, and then resolve the dependency you need.
+You need to do three basic things: create the container, register some modules
+in it, and then resolve the one you need and use it.
+
+Here is an example application code.
 
 ```js
-// Here is an example application code.
 import sf from 'sfioc'
 
 // Imagine that our app has an internal store...
