@@ -199,6 +199,9 @@ export function createContainer(containerOptions = {}) {
 
   /**
    * Resolves the registration with the given name.
+   * This function is taken from here:
+   * https://github.com/jeffijoe/awilix/blob/master/src/container.ts
+   * and adapted for this module.
    *
    * @param {string | object} registration
    * The id of the registration or registration.

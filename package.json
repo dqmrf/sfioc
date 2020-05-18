@@ -1,15 +1,20 @@
 {
   "name": "sfioc",
   "version": "1.0.0",
-  "description": "IOC container library",
+  "description": "Inversion of Control container for Node.JS",
   "main": "./lib/sfioc.js",
   "scripts": {
     "build": "rimraf lib && npx babel --config-file ./babel.build.config.js src -d lib",
     "test": "npx jest"
   },
   "keywords": [
-    "IOC",
-    "DI"
+    "ioc",
+    "di",
+    "dependency",
+    "injection",
+    "dependency-injection",
+    "inversion-of-control",
+    "service-locator"
   ],
   "author": "Mykhailo Pelykh",
   "license": "ISC",
