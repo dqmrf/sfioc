@@ -4,4 +4,4 @@ npm-debug.log
 /lib
 /coverage
 
-.log
+*.log

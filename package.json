@@ -1,6 +1,6 @@
 {
   "name": "sfioc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Inversion of Control container for Node.JS",
   "main": "./lib/sfioc.js",
   "scripts": {
@@ -18,7 +18,23 @@
   ],
   "author": "Mykhailo Pelykh",
   "license": "ISC",
+  "files": [
+    "lib",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dqmrf/sfioc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dqmrf/sfioc/issues"
+  },
+  "homepage": "https://github.com/dqmrf/sfioc#readme",
   "dependencies": {
+    "@babel/runtime": "^7.9.6",
     "async": "^3.2.0",
     "ramda": "^0.27.0",
     "tcomb-validation": "^3.4.1"

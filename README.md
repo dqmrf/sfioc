@@ -2,6 +2,13 @@
 Inversion of Control container for Node.JS. Inspired by [awilix](http://github.com/jeffijoe/awilix).
 
 
+# Installation
+
+With `npm`:
+
+`npm install sfioc --save`
+
+
 # Usage
 You need to do three basic things: create the container, register some modules
 in it, and then resolve the one you need and use it.
