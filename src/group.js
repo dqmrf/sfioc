@@ -3,7 +3,7 @@ import * as H from './helpers'
 import { ElementTypes, ELEMENT, COMPONENT_OPTIONS } from './constants'
 import {
   buildOptions as componentBuildOptions,
-  updateOptions as updateComponentOptions
+  handleOptions as handleComponentOptions
 } from './component'
 
 /**
@@ -25,7 +25,7 @@ export function createGroup(elements, options = {}) {
       paramName: 'elements',
       validator: t.Object,
     }).value,
-    [COMPONENT_OPTIONS]: updateComponentOptions(null, options)
+    [COMPONENT_OPTIONS]: handleComponentOptions(options)
   }
 
   Object.defineProperties(group, {

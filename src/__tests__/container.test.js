@@ -174,12 +174,17 @@ describe('container', () => {
       })
 
       it(`may be an 'Array<[String, Element]>' as the first arg`, () => {
-        expContainer.register({ component1, component2 })
+        expContainer.register({
+          component1,
+          component2: component2.singleton(),
+          component3,
+        }, { lifetime: Lifetime.TRANSIENT })
 
         container.register([
-          'component1', component1,
-          'component2', component2
-        ])
+          ['component1', component1],
+          ['component2', component2, { lifetime: Lifetime.SINGLETON }],
+          ['component3', component3]
+        ], { lifetime: Lifetime.TRANSIENT })
       })
 
       it(`may be an 'Array<Elements>' as the first arg`, () => {
@@ -218,7 +223,7 @@ describe('container', () => {
         const registrations = container.registrations
         const expRegistrations = expContainer.registrations
 
-        for (let id in registrations) {
+        for (let id in expRegistrations) {
           const registration = registrations[id]
           const expRegistration = expRegistrations[id]
 

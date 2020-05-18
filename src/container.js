@@ -5,9 +5,12 @@ import * as H from './helpers'
 import { createGroup } from './group'
 import { createResolver } from './resolver'
 import { createRegistration } from './registration'
+import { Elements, ContainerOptions } from './structures'
 import { SfiocResolutionError, SfiocTypeError } from './errors'
-import { Elements, Element, ContainerOptions, Group } from './structures'
-import { filterOptions as extractComponentOptions } from './component'
+import {
+  handleOptions as handleComponentOptions,
+  filterOptions as extractComponentOptions
+} from './component'
 import {
   InjectionMode,
   Lifetime,
@@ -75,73 +78,57 @@ export function createContainer(containerOptions = {}) {
    */
   function register(...args) {
     const [firstArg, secondArg, thirdArg] = args
-    const fnName = 'Sfioc.register'
-    const handler = t.createHandler({ description: fnName })
-    const options = R.is(String, firstArg) ? thirdArg : secondArg
-    const params = { [COMPONENT_OPTIONS]: options }
+    const options = (R.is(String, firstArg) ? thirdArg : secondArg) || {}
+    const params = { [COMPONENT_OPTIONS]: extractComponentOptions(options) }
+    const { namespace } = options;
 
     if (R.isEmpty(firstArg)) throw argsError(firstArg)
 
-    if (H.isGroup(firstArg)) {
-      handler.handle(firstArg, {
-        validator: Group,
-        paramName: ParamNames.first
-      })
+    if (H.isComponent(firstArg) && namespace) {
+      return registerElements({ [namespace]: firstArg }, params)
+    }
 
-      return _register(firstArg.elements, params)
+    if (H.isGroup(firstArg)) {
+      return registerElements(withNamespace(firstArg.elements), {
+        ...params,
+        parentGroup: firstArg
+      })
     }
 
     switch (R.type(firstArg)) {
       case 'Object': {
-        handler.handle(firstArg, {
-          validator: Elements,
-          paramName: ParamNames.first
-        })
-
-        return _register(firstArg, params)
+        return registerElements(withNamespace(firstArg), params)
       }
       case 'String': {
-        if (H.isElement(secondArg)) {
-          handler.handle(secondArg, {
-            validator: Element,
-            paramName: ParamNames.second
-          })
-
-          return _register({ [firstArg]: secondArg }, params)
-        }
-
-        switch (R.type(secondArg)) {
-          case 'Object': {
-            return register(firstArg, createGroup(secondArg), options)
-          }
-          case 'Array': {
-            secondArg.forEach(subarg => register(firstArg, subarg, options))
-            return container
-          }
-        }
-
-        break
+        if (namespace) throw argsError(namespace, firstArg)
+        return register(secondArg, { ...options, namespace: firstArg })
       }
       case 'Array': {
-        if (R.type(firstArg[0]) === 'String') {
-          for (let i = 0; i < firstArg.length; i+=2) {
-            register(firstArg[i], firstArg[i+1], options)
-          }
-        } else {
+        if (R.type(firstArg[0]) !== 'String') {
           firstArg.forEach(subarg => register(subarg, options))
+          return container
         }
 
-        return container
+        return register(
+          firstArg[0],
+          firstArg[1],
+          handleComponentOptions(params[COMPONENT_OPTIONS], firstArg[2])
+        )
       }
     }
 
-    throw argsError(`'${firstArg}', '${secondArg}'`)
+    throw argsError(firstArg, secondArg)
 
-    function argsError(args) {
+    function withNamespace(elements) {
+      if (!options.namespace) return elements
+      return { [options.namespace]: createGroup(elements) }
+    }
+
+    function argsError(...args) {
       return new SfiocTypeError({
-        description: fnName,
+        description: 'Sfioc.register',
         paramName: ParamNames.all,
-        given: args,
+        given: args.reduce((acc, arg) => (acc += `, ${arg}`)),
         expected: '(object) | (array) | (string, object | array)'
       })
     }
@@ -150,8 +137,7 @@ export function createContainer(containerOptions = {}) {
   /**
    * Registers input elements.
    *
-   * This method is only used internally, so it doesn't need any
-   * input parameter validations.
+   * This method is only used internally.
    *
    * @param {object} elements
    * Object with container elements.
@@ -162,14 +148,20 @@ export function createContainer(containerOptions = {}) {
    * @return {object}
    * The container.
    */
-  function _register(elements, params = {}) {
+  function registerElements(elements, params = {}) {
+    t.handle(elements, {
+      validator: Elements,
+      description: 'Sfioc.registerElements',
+      paramName: 'elements'
+    })
+
     params = R.mergeRight({ parentGroup: {} }, params)
 
     const elementIds = Object.keys(elements)
     const { parentGroup } = params
 
     for (const elementId of elementIds) {
-      const element = elements[elementId]
+      const element = R.clone(elements[elementId])
       const elementPath = U.joinRight([parentGroup.id, elementId])
 
       // Here options are overwritten from right to left.
@@ -190,7 +182,7 @@ export function createContainer(containerOptions = {}) {
           break
         }
         case GROUP: {
-          _register(
+          registerElements(
             element.elements, {
             parentGroup: {
               ...element,

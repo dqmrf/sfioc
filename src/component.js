@@ -1,3 +1,4 @@
+import R from 'ramda'
 import * as U from './utils'
 import * as H from './helpers'
 import t from './infra/tcomb'
@@ -29,7 +30,7 @@ const allowedOptions = [
 export function createComponent(target, options = {}) {
   const component = {
     target,
-    [COMPONENT_OPTIONS]: updateOptions(null, options)
+    [COMPONENT_OPTIONS]: handleOptions(options)
   }
 
   Object.defineProperties(component, {
@@ -75,7 +76,7 @@ export function buildOptions() {
   }
 
   function updateComponentOptions(...options) {
-    return updateOptions(this, ...options)
+    return updateOptions(this, [...options], true)
   }
 }
 
@@ -87,22 +88,36 @@ function componentBuildOptions() {
   }
 }
 
-export function updateOptions(source, inputOptions, ...args) {
-  const newOptions = args.reduce((acc, options) => {
-    return Object.assign({}, acc, options || {})
-  }, inputOptions || {})
+export function updateOptions(source, inputOptions, overwrite = false) {
+  const newOptions = handleOptions(U.toArray(inputOptions))
 
-  t.handle(newOptions, {
+  if (!source) return newOptions
+
+  if (overwrite) {
+    Object.assign(source[COMPONENT_OPTIONS], newOptions)
+    return source
+  }
+
+  return {
+    ...source,
+    [COMPONENT_OPTIONS]: R.mergeRight(source[COMPONENT_OPTIONS], newOptions)
+  }
+}
+
+export function handleOptions(...inputOptions) {
+  const mergedOptions = inputOptions.reduce((acc, options) => {
+    if (R.type(options) === 'Array') {
+      options = handleOptions(...options)
+    }
+    return Object.assign({}, acc, options || {})
+  }, {})
+
+  t.handle(mergedOptions, {
     validator: ComponentOptions,
     paramName: COMPONENT_OPTIONS
   })
 
-  const updatedOptions = Object.assign(
-    (source ? source[COMPONENT_OPTIONS] : {}),
-    filterOptions(newOptions)
-  )
-
-  return source || updatedOptions
+  return filterOptions(mergedOptions)
 }
 
 export function filterOptions(options) {

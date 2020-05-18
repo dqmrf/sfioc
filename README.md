@@ -376,6 +376,7 @@ Args:
     Sfioc injects selectors with the names of registered modules in this callback.
     So if you registered, for example `first` and `second` modules, you can specify
     a dependency on them in this way:
+
     ```js
     component(third).dependsOn((DP) => ([DP.first, DP.second]))
     // is the same as:
@@ -486,11 +487,15 @@ last possible argument.
 
 ```js
 // Register single component
+container.register('someOperationName', component(someOperationFactory))
+
+// Same, but with options
 container.register(
   'someOperationName',
   component(someOperationFactory),
-  // I don't quite understand why you need to do this, but it's also possible:
   {
+    // These options can't overwrite the "someOperationFactory"'s own options.
+    // They will be used as default values for options that are not specified.
     lifetime: Lifetime.SINGLETON,
     resolveAs: ResolveAs.FUNCTION
   }
@@ -534,7 +539,7 @@ container.register('operations', [
 container.register({
   operations: group({
     login: component(loginFactory),
-    signup: component(signupFactory)
+    signup: component(signupFactory),
     sendSpam: component(sendSpamFactory),
     sendGreet: component(sendGreetFactory)
   })
@@ -552,16 +557,16 @@ container.register(group({
   signup: component(signupFactory)
 }), { /* options */ })
 
+// Same as above
 container.register([
-  'login', component(loginFactory),
-  'signup', component(signupFactory)
+  ['login', component(loginFactory), { /* options */ }],
+  ['signup', component(signupFactory), { /* options */ }]
 ], { /* options */ })
 ```
 
 
 ## TODO:
 ### Necessary
-- ability to: register('namespace', Elements)
 - leave resolveAs property in registration
 - per module local injections
 - add namespaces

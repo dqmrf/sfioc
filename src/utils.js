@@ -32,3 +32,7 @@ export function setMainOption(arg, mainOption) {
   if (typeof arg === 'object') return arg
   return { [mainOption]: arg }
 }
+
+export function toArray(arg) {
+  return (R.type(arg) === 'Array') ? arg : [arg]
+}
