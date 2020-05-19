@@ -29,7 +29,7 @@ const defaultOptions = {
 }
 
 /**
- * Creates an Sfioc container instance.
+ * Creates a Sfioc container instance.
  *
  * @return {object}
  * The container.

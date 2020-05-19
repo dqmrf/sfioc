@@ -5,7 +5,8 @@
   "main": "./lib/sfioc.js",
   "scripts": {
     "build": "rimraf lib && npx babel --config-file ./babel.build.config.js src -d lib",
-    "test": "npx jest"
+    "test": "npx jest",
+    "cover": "npm test -- --coverage"
   },
   "keywords": [
     "ioc",
@@ -17,10 +18,11 @@
     "service-locator"
   ],
   "author": "Mykhailo Pelykh",
-  "license": "ISC",
+  "license": "MIT",
   "files": [
     "lib",
-    "README.md"
+    "README.md",
+    "LICENSE.md"
   ],
   "engines": {
     "node": ">=6.0.0"

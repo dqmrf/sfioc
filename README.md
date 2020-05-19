@@ -571,18 +571,3 @@ container.register([
   ['signup', component(signupFactory), { /* options */ }]
 ], { /* options */ })
 ```
-
-
-## TODO:
-### Necessary
-- leave resolveAs property in registration
-- per module local injections
-- add namespaces
-- createContainer: move options related to components into componentOptions
-  namespace
-
-### Secondary
-- Autoresolving.
-- Group resolving implementation.
-- Angular-like dependencies.
-- Validator: expand 'struct' structure when t.handler throws an error.
