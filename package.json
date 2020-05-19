@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rimraf lib && npx babel --config-file ./babel.build.config.js src -d lib",
     "test": "npx jest",
-    "cover": "npm test -- --coverage"
+    "cover": "npm test -- --coverage",
+    "lint": "npx eslint src/"
   },
   "keywords": [
     "ioc",
@@ -54,7 +55,8 @@
     "@babel/polyfill": "^7.8.7",
     "@babel/preset-env": "^7.9.6",
     "babel-jest": "^26.0.1",
-    "babel-loader": "^8.1.0",
+    "eslint": "^7.0.0",
+    "eslint-plugin-jest": "^23.13.1",
     "jest": "^25.5.2",
     "rimraf": "^3.0.2"
   }

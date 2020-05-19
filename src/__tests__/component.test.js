@@ -140,7 +140,7 @@ describe('builder options', () => {
   })
 
   describe('class', () => {
-    class TestClass { getValue = () => 228 }
+    class TestClass { getValue() { return 228 } }
 
     it(`changes component 'resolveAs' to 'CLASS'`, () => {
       const component = createComponent(TestClass).class()

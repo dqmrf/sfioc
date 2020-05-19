@@ -284,14 +284,14 @@ describe('container', () => {
       const error = catchError(() => container.register(''))
 
       expect(error).toBeInstanceOf(SfiocTypeError)
-      expect(error.message).toContain('\"\"')
+      expect(error.message).toContain('""')
     })
 
     it('throws a SfiocTypeError when invalid first argument (empty Array) was passed', () => {
       const error = catchError(() => container.register([]))
 
       expect(error).toBeInstanceOf(SfiocTypeError)
-      expect(error.message).toContain('\"\"')
+      expect(error.message).toContain('""')
     })
 
     it('throws a SfiocTypeError when invalid first argument (Array<[String, Number]>) was passed', () => {
@@ -336,7 +336,7 @@ describe('container', () => {
         })
       })
 
-      expect(Object.keys(container.registrations).length).toBe(2)
+      expect(Object.keys(container.registrations)).toHaveLength(2)
 
       const rootFactory = container.resolve('getTestValue')
 
@@ -355,7 +355,7 @@ describe('container', () => {
         })
       })
 
-      expect(Object.keys(container.registrations).length).toBe(2)
+      expect(Object.keys(container.registrations)).toHaveLength(2)
 
       const rootFactory = container.resolve('getTestValue')
 
@@ -491,7 +491,7 @@ describe('container', () => {
         container.resolve('getTestValue')
 
         expect(callback).toHaveBeenCalled()
-        expect(callback.mock.calls.length).toBe(1)
+        expect(callback.mock.calls).toHaveLength(1)
       })
 
       it('injects selectors (all but its own) inside callback', () => {

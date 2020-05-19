@@ -39,7 +39,7 @@ describe('createRegistration', () => {
   })
 
   it('wraps components target class correctly', () => {
-    class TestClass { getValue = () => 228 }
+    class TestClass { getValue() { return 228 } }
     const component = createComponent(TestClass).class()
     const registration = createRegistration(component)
 
@@ -47,7 +47,7 @@ describe('createRegistration', () => {
     expect(new registration.target().getValue()).toBe(228)
   })
 
-  it(`throws an SfiocTypeError when the component target doesn\'t match its 'resolveAs' assertion`, () => {
+  it(`throws an SfiocTypeError when the component target doesn't match its 'resolveAs' assertion`, () => {
     const component = createComponent('wrongTarget').fn()
     const error = catchError(() => createRegistration(component))
 
