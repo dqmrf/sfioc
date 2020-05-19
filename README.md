@@ -1,4 +1,10 @@
 # Sfioc
+
+[![npm](https://img.shields.io/npm/v/sfioc.svg?maxAge=1000)](https://www.npmjs.com/package/sfioc)
+[![node](https://img.shields.io/node/v/sfioc.svg?maxAge=1000)](https://www.npmjs.com/package/sfioc)
+[![npm](https://img.shields.io/npm/dt/sfioc.svg?maxAge=1000)](https://www.npmjs.com/package/sfioc)
+[![npm](https://img.shields.io/npm/l/sfioc.svg?maxAge=1000)](https://github.com/dqmrf/sfioc/blob/master/LICENSE.md)
+
 Inversion of Control container for Node.JS. Inspired by [awilix](http://github.com/jeffijoe/awilix).
 
 
