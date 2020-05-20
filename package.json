@@ -1,6 +1,6 @@
 {
   "name": "sfioc",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Inversion of Control container for Node.JS",
   "main": "./lib/sfioc.js",
   "scripts": {
