@@ -1,6 +1,8 @@
 # Sfioc
 
 [![npm](https://img.shields.io/npm/v/sfioc.svg?maxAge=1000)](https://www.npmjs.com/package/sfioc)
+[![dependency Status](https://img.shields.io/david/dqmrf/sfioc.svg?maxAge=1000)](https://david-dm.org/dqmrf/sfioc)
+[![devDependency Status](https://img.shields.io/david/dev/dqmrf/sfioc.svg?maxAge=1000)](https://david-dm.org/dqmrf/sfioc?type=dev)
 [![Build Status](https://api.travis-ci.org/dqmrf/sfioc.svg?branch=master)](https://travis-ci.org/github/dqmrf/sfioc)
 [![Coverage Status](https://coveralls.io/repos/github/dqmrf/sfioc/badge.svg?branch=master)](https://coveralls.io/github/dqmrf/sfioc?branch=master)
 [![npm](https://img.shields.io/npm/dt/sfioc.svg?maxAge=1000)](https://www.npmjs.com/package/sfioc)
