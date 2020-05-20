@@ -61,6 +61,7 @@ export function createContainer(containerOptions = {}) {
     register,
     resolve,
     registrations,
+    resolutionStack,
     cache,
     get: proxify(registrations)
   }

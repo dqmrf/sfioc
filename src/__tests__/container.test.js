@@ -287,6 +287,13 @@ describe('container', () => {
       expect(error.message).toContain('""')
     })
 
+    it('throws a SfiocTypeError when the first and second arguments are String arguments', () => {
+      const error = catchError(() => container.register('namespace', 'wtf'))
+
+      expect(error).toBeInstanceOf(SfiocTypeError)
+      expect(error.message).toContain('namespace, wtf')
+    })
+
     it('throws a SfiocTypeError when invalid first argument (empty Array) was passed', () => {
       const error = catchError(() => container.register([]))
 
@@ -611,7 +618,7 @@ describe('container', () => {
       container.register({
         first: createComponent(first, { dependsOn: 'second' }),
         second: createComponent(second, { dependsOn: 'third' }),
-        third: createComponent(third, { dependsOn: 'unregistered' }),
+        third: createComponent(third, { dependsOn: 'unregistered' })
       })
 
       const error = catchError(() => {
@@ -639,6 +646,30 @@ describe('container', () => {
 
       expect(error).toBeInstanceOf(SfiocResolutionError)
       expect(error.message).toContain('first -> second -> third -> second')
+    })
+
+    it('throws a SfiocResolutionError when the lifetime of the input registration is unknown', () => {
+      container.register({ component: stubComponent() })
+      container.registrations.component.lifetime = 'wrongLifetime'
+
+      const error = catchError(() => {
+        container.resolve('component')
+      })
+
+      expect(error).toBeInstanceOf(SfiocResolutionError)
+      expect(error.message).toMatch(/wrongLifetime/i)
+    })
+
+    it('throws a SfiocResolutionError when the container injection mode is unknown', () => {
+      container.register({ component: stubComponent() })
+      container.options.injectionMode = 'WRONG'
+
+      const error = catchError(() => {
+        container.resolve('component')
+      })
+
+      expect(error).toBeInstanceOf(SfiocResolutionError)
+      expect(error.message).toMatch(/Unknown injection mode/i)
     })
 
     describe('lifetime', () => {
@@ -696,6 +727,20 @@ describe('container', () => {
         const counter = container.resolve('root')
         expect(counter).toBe(0)
       })
+    })
+
+    it(`lets me specify dependencies using selectors`, () => {
+      container.register({
+        testValue: createComponent(testValue).value(),
+        getTestValue: createComponent(getTestValue, {
+          dependsOn: (({ testValue }) => [testValue])
+        })
+      })
+
+      const rootFactory = container.resolve('getTestValue')
+
+      expect(rootFactory).toBeTruthy()
+      expect(rootFactory()).toBe(testValue)
     })
 
     it(`lets me resolve dependencies via 'get' proxy`, () => {
@@ -782,6 +827,22 @@ describe('container', () => {
           loggedIn: true,
           anotherValue: true
         })
+      })
+
+      it('throws a SfiocResolutionError when there are unregistered dependencies', () => {
+        const wrongComponent = ({ wrongValue }) => (wrongValue)
+
+        container.register({
+          testValue: createComponent(testValue).value(),
+          wrongComponent: createComponent(wrongComponent)
+        })
+
+        const error = catchError(() => {
+          container.resolve('wrongComponent')
+        })
+
+        expect(error).toBeInstanceOf(SfiocResolutionError)
+        expect(error.message).toMatch(/wrongComponent -> wrongValue/i)
       })
     })
   })

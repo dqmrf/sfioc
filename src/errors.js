@@ -46,11 +46,6 @@ export class SfiocTypeError extends SfiocError {
 
     return result
   }
-
-  static assert(condition, params) {
-    if (condition) return condition
-    throw new SfiocTypeError(params)
-  }
 }
 
 export class SfiocResolutionError extends SfiocError {

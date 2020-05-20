@@ -6,18 +6,12 @@ module.exports = {
     const options = inputOpts
 
     return {
-      handle: handle.bind(this),
-      extend: extend.bind(this)
+      handle: handle.bind(this)
     }
 
     function handle(param, inputOpts = {}) {
       let newOpts = R.mergeRight(options, inputOpts)
       return this.handle(param, newOpts)
-    }
-
-    function extend(inputOpts = {}) {
-      let newOpts = R.mergeRight(options, inputOpts)
-      return this.createHandler(newOpts)
     }
   },
   handle(param, inputOpts = {}) {
