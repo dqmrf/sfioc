@@ -100,7 +100,7 @@ export function createContainer(containerOptions = {}) {
         return registerElements(withNamespace(firstArg), params)
       }
       case 'String': {
-        if (namespace) throw argsError(namespace, firstArg)
+        if (R.is(String, secondArg)) throw argsError(firstArg, secondArg)
         return register(secondArg, { ...options, namespace: firstArg })
       }
       case 'Array': {
@@ -129,7 +129,11 @@ export function createContainer(containerOptions = {}) {
         description: 'Sfioc.register',
         paramName: ParamNames.all,
         given: args.reduce((acc, arg) => (acc += `, ${arg}`)),
-        expected: '(object) | (array) | (string, object | array)'
+        expected: [
+          '"String, Object, [options]"',
+          '"Object, [options]"',
+          '"Array, [options]"'
+        ].join(' | '),
       })
     }
   }
