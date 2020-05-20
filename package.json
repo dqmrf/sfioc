@@ -7,7 +7,7 @@
     "build": "rimraf lib && npx babel --config-file ./babel.build.config.js src -d lib",
     "test": "npx jest",
     "cover": "npm test -- --coverage",
-    "coveralls": "npm run cover && coveralls < coverage/lcov.info",
+    "coveralls": "npm run cover && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "npx eslint src/"
   },
   "keywords": [
