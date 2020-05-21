@@ -4,7 +4,7 @@
 [![dependency Status](https://img.shields.io/david/dqmrf/sfioc.svg?maxAge=1000)](https://david-dm.org/dqmrf/sfioc)
 [![devDependency Status](https://img.shields.io/david/dev/dqmrf/sfioc.svg?maxAge=1000)](https://david-dm.org/dqmrf/sfioc?type=dev)
 [![Build Status](https://api.travis-ci.org/dqmrf/sfioc.svg?branch=master)](https://travis-ci.org/github/dqmrf/sfioc)
-[![Coverage Status](https://coveralls.io/repos/github/dqmrf/sfioc/badge.svg?branch=master)](https://coveralls.io/github/dqmrf/sfioc?branch=master)
+[![Test coverage](https://codecov.io/gh/dqmrf/sfioc/branch/master/graph/badge.svg)](https://codecov.io/gh/dqmrf/sfioc)
 [![npm](https://img.shields.io/npm/dt/sfioc.svg?maxAge=1000)](https://www.npmjs.com/package/sfioc)
 [![npm](https://img.shields.io/npm/l/sfioc.svg?maxAge=1000)](https://github.com/dqmrf/sfioc/blob/master/LICENSE.md)
 [![node](https://img.shields.io/node/v/sfioc.svg?maxAge=1000)](https://www.npmjs.com/package/sfioc)
